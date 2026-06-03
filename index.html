@@ -6,6 +6,7 @@
 <title>PrintFlow — Manajemen Digital Printing</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  
 <!-- ===== FIREBASE CONFIG ===== -->
 <script type="module">
@@ -892,6 +893,264 @@ textarea.form-control { resize: vertical; min-height: 72px; }
   letter-spacing: 0.3px;
 }
 
+/* ====== QR CODE MODAL ====== */
+.qr-modal-wrap {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.qr-code-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 12px auto;
+  box-shadow: 0 4px 20px rgba(15,14,23,0.08);
+}
+
+.qr-code-box canvas,
+.qr-code-box img {
+  display: block !important;
+}
+
+.qr-order-info {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  text-align: left;
+}
+
+.qr-order-info .qr-nama {
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.qr-order-info .qr-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.qr-instruction {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.qr-url-box {
+  background: var(--paper2);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  color: var(--muted);
+  word-break: break-all;
+  margin: 10px 0;
+  font-family: monospace;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.qr-url-box:hover { background: #ebe6dc; color: var(--ink); }
+
+/* ====== STATUS PAGE (Konsumen) ====== */
+#page-status {
+  display: none;
+}
+
+#page-status.active {
+  display: block;
+}
+
+.status-page-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.status-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(15,14,23,0.1);
+}
+
+.status-card-header {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--ink);
+  color: #fff;
+}
+
+.status-card-header .brand {
+  font-family: var(--font-head);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.status-card-header .brand span { color: var(--accent); }
+
+.status-card-header .subtitle {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.status-card-body {
+  padding: 24px 28px;
+}
+
+.status-hero {
+  text-align: center;
+  padding: 20px 0 24px;
+}
+
+.status-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 32px;
+}
+
+.status-icon-antri { background: #fef3c7; color: #d97706; }
+.status-icon-proses { background: #dbeafe; color: #2563eb; }
+.status-icon-selesai { background: #dcfce7; color: #16a34a; }
+.status-icon-diambil { background: #f3f4f6; color: #6b7280; }
+
+.status-hero-label {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.status-hero-desc {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.status-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.status-info-row:last-child { border-bottom: none; }
+.status-info-label { color: var(--muted); font-size: 12px; font-weight: 500; }
+
+.status-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0 24px;
+  position: relative;
+}
+
+.status-progress::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 18px;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+  flex: 1;
+}
+
+.status-step-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--paper2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--muted);
+  transition: all 0.3s;
+}
+
+.status-step-dot.done {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.status-step-dot.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(232,72,85,0.15);
+}
+
+.status-step-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.status-step-label.active { color: var(--accent); }
+.status-step-label.done { color: var(--green); }
+
+/* Scan QR page in pickup */
+.scan-area {
+  background: var(--paper2);
+  border: 2px dashed var(--border);
+  border-radius: var(--r);
+  padding: 32px 20px;
+  text-align: center;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+
+.scan-area:hover { border-color: var(--accent); }
+.scan-area i { font-size: 48px; color: var(--muted); opacity: 0.4; margin-bottom: 12px; display: block; }
+.scan-area p { font-size: 13.5px; color: var(--muted); }
+
+/* Print QR styles */
+@media print {
+  #sidebar, #topbar, .no-print { display: none !important; }
+  #main { margin-left: 0 !important; }
+  .qr-print-area { display: block !important; }
+  .modal-overlay { position: static !important; background: none !important; opacity: 1 !important; pointer-events: all !important; }
+  .modal { box-shadow: none !important; max-height: none !important; }
+}
+
+.qr-print-area { display: none; }
+
 /* ====== NOTE TAG ====== */
 .config-note {
   background: #fef3c7;
@@ -931,6 +1190,9 @@ textarea.form-control { resize: vertical; min-height: 72px; }
     </div>
     <div class="nav-item" data-page="riwayat">
       <i class="ti ti-history"></i> Riwayat
+    </div>
+    <div class="nav-item" data-page="scan-qr">
+      <i class="ti ti-qrcode"></i> Scan QR Pickup
     </div>
     <div class="nav-item" data-page="settings">
       <i class="ti ti-settings"></i> Pengaturan
@@ -990,6 +1252,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
       <table>
         <thead>
           <tr>
+            <th>No. Order</th>
             <th>Konsumen</th>
             <th>Item</th>
             <th>Tgl Order</th>
@@ -1043,6 +1306,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
       <table>
         <thead>
           <tr>
+            <th>No. Order</th>
             <th>Konsumen</th>
             <th>Item</th>
             <th>Tgl Order</th>
@@ -1054,6 +1318,34 @@ textarea.form-control { resize: vertical; min-height: 72px; }
           <tr><td colspan="5"><div class="empty-state"><i class="ti ti-inbox"></i><p>Belum ada data</p></div></td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ===== SCAN QR PAGE ===== -->
+  <div class="page" id="page-scan-qr">
+    <div style="max-width:520px;margin:0 auto;">
+      <div class="section-header" style="margin-bottom:20px;">
+        <div>
+          <div class="section-title">Scan QR Code Pengambilan</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Masukkan ID order dari QR code, atau scan langsung</div>
+        </div>
+      </div>
+
+      <div class="scan-area" id="qr-scanner-area">
+        <i class="ti ti-qrcode"></i>
+        <p>Kamera scanner akan aktif di sini</p>
+        <p style="font-size:12px;margin-top:6px;opacity:0.6;">atau masukkan ID order secara manual di bawah</p>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <input class="form-control" id="scan-manual-input" placeholder="No. Order (cth: PF-240603-AB12) atau ID order" style="flex:1;"
+          onkeydown="if(event.key==='Enter') processQRScan()">
+        <button class="btn btn-primary" onclick="processQRScan()">
+          <i class="ti ti-search"></i> Cek Status
+        </button>
+      </div>
+
+      <div id="scan-result-wrap" style="display:none;"></div>
     </div>
   </div>
 
@@ -1095,6 +1387,13 @@ textarea.form-control { resize: vertical; min-height: 72px; }
       <button class="btn-icon" onclick="closeModal('modal-order')"><i class="ti ti-x"></i></button>
     </div>
     <div class="modal-body">
+      <div class="form-group" id="order-id-display-wrap" style="display:none;">
+        <label class="form-label">No. Order</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input class="form-control" id="f-order-no" readonly style="background:var(--paper2);color:var(--muted);font-family:monospace;font-size:13px;letter-spacing:0.5px;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="copyOrderNo()" title="Salin No. Order" style="flex-shrink:0;"><i class="ti ti-copy"></i></button>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Nama Konsumen *</label>
@@ -1146,6 +1445,55 @@ textarea.form-control { resize: vertical; min-height: 72px; }
   </div>
 </div>
 
+<!-- ===== MODAL QR CODE ===== -->
+<div class="modal-overlay" id="modal-qr">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">QR Code Pesanan</div>
+      <button class="btn-icon" onclick="closeModal('modal-qr')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-modal-wrap">
+        <div class="qr-order-info" id="qr-order-info">
+          <div class="qr-nama" id="qr-nama-label">—</div>
+          <div class="qr-meta" id="qr-meta-label">—</div>
+        </div>
+        <div class="qr-code-box">
+          <div id="qr-code-render"></div>
+        </div>
+        <div class="qr-url-box" id="qr-url-display" onclick="copyQRUrl()" title="Klik untuk salin link">
+          —
+        </div>
+        <p class="qr-instruction">
+          <i class="ti ti-info-circle" style="font-size:13px;"></i>
+          Konsumen scan QR ini untuk melihat status pesanan secara real-time.<br>
+          Atau bagikan link di atas via WhatsApp.
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer no-print">
+      <button class="btn btn-ghost btn-sm" onclick="copyQRUrl()"><i class="ti ti-copy"></i> Salin Link</button>
+      <button class="btn btn-ghost btn-sm" onclick="shareQRWA()"><i class="ti ti-brand-whatsapp"></i> Kirim WA</button>
+      <button class="btn btn-secondary" onclick="printQR()"><i class="ti ti-printer"></i> Cetak QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL STATUS KONSUMEN ===== -->
+<div class="modal-overlay" id="modal-status-konsumen">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <div class="modal-title">Status Pesanan</div>
+      <button class="btn-icon" onclick="closeModal('modal-status-konsumen')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body" id="modal-status-body">
+    </div>
+    <div class="modal-footer" id="modal-status-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-status-konsumen')">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div id="toast-container"></div>
 
@@ -1166,6 +1514,7 @@ const pageNames = {
   produksi: 'Board Produksi',
   pengambilan: 'Pengambilan Barang',
   riwayat: 'Riwayat Order',
+  'scan-qr': 'Scan QR Pickup',
   settings: 'Pengaturan'
 };
 
@@ -1187,6 +1536,7 @@ function renderCurrentPage(page) {
   else if (page === 'produksi') renderKanban();
   else if (page === 'pengambilan') renderPickup();
   else if (page === 'riwayat') renderRiwayat();
+  else if (page === 'scan-qr') initScanPage();
 }
 
 function toggleSidebar() {
@@ -1201,6 +1551,11 @@ window.addEventListener('load', () => {
   if (window._firebaseReady) initFirebase();
   // Set today's date in form
   document.getElementById('f-tgl').valueAsDate = new Date();
+  // Check if URL has status param (konsumen scan QR)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('id') || params.get('status')) {
+    window._pendingStatusId = params.get('id') || params.get('status');
+  }
 });
 
 function initFirebase() {
@@ -1216,6 +1571,11 @@ function initFirebase() {
       });
       updateAllViews();
       setFirebaseStatus(true);
+      // Check pending status from QR scan URL
+      if (window._pendingStatusId) {
+        showOrderStatusForConsumer(window._pendingStatusId);
+        window._pendingStatusId = null;
+      }
     }, (err) => {
       console.error('Firestore error:', err);
       setFirebaseStatus(false);
@@ -1321,6 +1681,11 @@ function openNewOrder() {
   document.getElementById('f-wa').value = '';
   document.getElementById('f-catatan').value = '';
   document.getElementById('f-tgl').valueAsDate = new Date();
+  document.getElementById('order-id-display-wrap').style.display = 'none';
+  document.getElementById('f-order-no').value = '';
+  // Reset save button
+  const saveBtn = document.querySelector('#modal-order .modal-footer .btn-primary');
+  if (saveBtn) { saveBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Simpan Order'; saveBtn.disabled = false; }
   // Clear items
   const container = document.getElementById('items-container');
   const rows = container.querySelectorAll('.item-row');
@@ -1340,6 +1705,9 @@ function openEditOrder(id) {
   document.getElementById('f-wa').value = order.wa || '';
   document.getElementById('f-catatan').value = order.catatan || '';
   document.getElementById('f-tgl').value = order.tgl || '';
+  // Show order number
+  document.getElementById('order-id-display-wrap').style.display = 'block';
+  document.getElementById('f-order-no').value = order.orderNo || id.slice(0, 8).toUpperCase();
   // Clear and fill items
   const container = document.getElementById('items-container');
   const rows = container.querySelectorAll('.item-row');
@@ -1376,17 +1744,44 @@ async function saveOrder() {
         ...data, updatedAt: window._serverTimestamp()
       });
       toast('Order berhasil diperbarui!', 'success');
+      closeModal('modal-order');
     } else {
-      await window._addDoc(window._col(window._db, 'orders'), {
-        ...data, createdAt: window._serverTimestamp()
-      });
-      toast('Order baru berhasil disimpan!', 'success');
+      // Generate human-readable order number: PF-YYMMDD-XXXX
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(-2);
+      const mm = String(now.getMonth()+1).padStart(2,'0');
+      const dd = String(now.getDate()).padStart(2,'0');
+      const rand = Math.random().toString(36).slice(-4).toUpperCase();
+      const orderNo = `PF-${yy}${mm}${dd}-${rand}`;
+      data.orderNo = orderNo;
+      data.createdAt = window._serverTimestamp();
+
+      const docRef = await window._addDoc(window._col(window._db, 'orders'), data);
+      toast(`Order disimpan! No. Order: ${orderNo}`, 'success');
+
+      // Show order ID after saving
+      document.getElementById('modal-order-title').textContent = 'Order Tersimpan ✓';
+      document.getElementById('order-id-display-wrap').style.display = 'block';
+      document.getElementById('f-order-no').value = orderNo;
+      currentEditId = docRef.id; // prevent re-save
+      // Change save button text
+      const saveBtn = document.querySelector('#modal-order .modal-footer .btn-primary');
+      if (saveBtn) { saveBtn.innerHTML = '<i class="ti ti-circle-check"></i> Tersimpan'; saveBtn.disabled = true; }
     }
-    closeModal('modal-order');
   } catch(e) {
     console.error(e);
     toast('Gagal menyimpan. Cek koneksi & konfigurasi Firebase.', 'error');
   }
+}
+
+function copyOrderNo() {
+  const val = document.getElementById('f-order-no').value;
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(() => toast('No. Order disalin!', 'success')).catch(() => {
+    const el = document.createElement('textarea'); el.value = val;
+    document.body.appendChild(el); el.select(); document.execCommand('copy');
+    document.body.removeChild(el); toast('No. Order disalin!', 'success');
+  });
 }
 
 // ==============================
@@ -1438,6 +1833,10 @@ function showDetail(id) {
 
   body.innerHTML = `
     <div class="detail-item-row">
+      <span class="detail-label">No. Order</span>
+      <span style="font-family:monospace;font-size:13px;font-weight:600;color:var(--accent);">${escH(order.orderNo || order.id.slice(0,8).toUpperCase())}</span>
+    </div>
+    <div class="detail-item-row">
       <span class="detail-label">Status</span>
       ${badgeHtml(order.status)}
     </div>
@@ -1466,6 +1865,7 @@ function showDetail(id) {
   footer.innerHTML = `
     <button class="btn btn-ghost btn-sm btn-danger" onclick="deleteOrder('${id}')"><i class="ti ti-trash"></i></button>
     <button class="btn btn-ghost btn-sm" onclick="openEditOrder('${id}')"><i class="ti ti-edit"></i> Edit</button>
+    <button class="btn btn-ghost btn-sm" onclick="openQRModal('${id}')"><i class="ti ti-qrcode"></i> QR Code</button>
     <div style="flex:1"></div>
     ${statusBtns}
   `;
@@ -1494,6 +1894,7 @@ function renderDashboard() {
   }
   tbody.innerHTML = recent.map(o => `
     <tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--muted);">${escH(o.orderNo || o.id.slice(0,8).toUpperCase())}</td>
       <td class="td-name">${escH(o.nama)}</td>
       <td style="color:var(--muted);font-size:12.5px;">${(o.items||[]).map(i=>`${i.qty} ${i.satuan} ${i.nama}`).join(', ')}</td>
       <td style="color:var(--muted);font-size:12.5px;">${o.tgl || '-'}</td>
@@ -1532,6 +1933,7 @@ function renderKanban() {
 
       return `
         <div class="kcard" onclick="showDetail('${o.id}')">
+          <div style="font-size:10px;font-family:monospace;color:var(--muted);margin-bottom:2px;">${escH(o.orderNo || o.id.slice(0,8).toUpperCase())}</div>
           <div class="kcard-name">${escH(o.nama)}</div>
           <div class="kcard-date"><i class="ti ti-calendar" style="font-size:11px;"></i> ${o.tgl || '-'}</div>
           <div class="kcard-items">${itemsHtml}${more}</div>
@@ -1596,6 +1998,7 @@ function renderPickup() {
           ${o.catatan ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;"><i class="ti ti-notes" style="font-size:12px;"></i> ${escH(o.catatan)}</div>` : ''}
         </div>
         <div class="pickup-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openQRModal('${o.id}')" style="color:var(--purple);border-color:var(--purple);"><i class="ti ti-qrcode"></i> QR</button>
           ${waBtn}
           ${pickupBtn}
         </div>
@@ -1618,6 +2021,7 @@ function renderRiwayat() {
   }
   tbody.innerHTML = filtered.map(o => `
     <tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--muted);">${escH(o.orderNo || o.id.slice(0,8).toUpperCase())}</td>
       <td class="td-name">${escH(o.nama)}</td>
       <td style="color:var(--muted);font-size:12.5px;">${(o.items||[]).map(i=>`${i.qty} ${i.satuan} ${i.nama}`).join(', ')}</td>
       <td style="color:var(--muted);font-size:12.5px;">${o.tgl || '-'}</td>
@@ -1656,6 +2060,267 @@ function toast(msg, type = '') {
   el.innerHTML = `<i class="ti ${icon}"></i> ${msg}`;
   container.appendChild(el);
   setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; el.style.transition = '0.3s'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ==============================
+// QR CODE FUNCTIONS
+// ==============================
+let currentQROrderId = null;
+let currentQROrder = null;
+
+function getStatusURL(orderId) {
+  // URL track.html terpisah — deploy bersama di GitHub Pages
+  const base = window.location.href.split('#')[0].split('?')[0];
+  const dir = base.substring(0, base.lastIndexOf('/') + 1);
+  return `${dir}track.html?id=${orderId}`;
+}
+
+function openQRModal(id) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  currentQROrderId = id;
+  currentQROrder = order;
+
+  const url = getStatusURL(id);
+  const storeName = document.getElementById('store-name')?.value || 'Digital Printing';
+
+  document.getElementById('qr-nama-label').textContent = order.nama;
+  const itemsStr = (order.items || []).map(it => `${it.qty} ${it.satuan} ${it.nama}`).join(', ');
+  document.getElementById('qr-meta-label').textContent = `${itemsStr} • ${order.tgl || '-'}`;
+  document.getElementById('qr-url-display').textContent = url;
+
+  // Render QR Code
+  const qrWrap = document.getElementById('qr-code-render');
+  qrWrap.innerHTML = '';
+  try {
+    new QRCode(qrWrap, {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: '#0f0e17',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {
+    qrWrap.innerHTML = `<div style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-align:center;padding:20px;">QR library tidak termuat. Gunakan link di bawah.</div>`;
+  }
+
+  closeModal('modal-detail');
+  openModal('modal-qr');
+}
+
+function copyQRUrl() {
+  if (!currentQROrderId) return;
+  const url = getStatusURL(currentQROrderId);
+  navigator.clipboard.writeText(url).then(() => {
+    toast('Link berhasil disalin!', 'success');
+  }).catch(() => {
+    // fallback
+    const el = document.createElement('textarea');
+    el.value = url;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    toast('Link berhasil disalin!', 'success');
+  });
+}
+
+function shareQRWA() {
+  if (!currentQROrder || !currentQROrderId) return;
+  const url = getStatusURL(currentQROrderId);
+  const storeName = document.getElementById('store-name')?.value || 'Digital Printing';
+  const msg = `Halo ${currentQROrder.nama}! 👋\n\nPesanan Anda di *${storeName}* sudah terdaftar.\n\nGunakan link ini untuk memantau status pesanan Anda secara real-time:\n${url}\n\nAtau tunjukkan QR Code ini saat pengambilan.`;
+  const wa = currentQROrder.wa ? `62${currentQROrder.wa.replace(/^0/, '')}` : '';
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function printQR() {
+  window.print();
+}
+
+// ==============================
+// SCAN QR / CEK STATUS
+// ==============================
+function initScanPage() {
+  document.getElementById('scan-manual-input').value = '';
+  document.getElementById('scan-result-wrap').style.display = 'none';
+
+  // Check if URL has ?status= param (for konsumen view)
+  checkURLStatusParam();
+}
+
+function checkURLStatusParam() {
+  const params = new URLSearchParams(window.location.search);
+  const statusId = params.get('id') || params.get('status');
+  if (statusId) {
+    showOrderStatusForConsumer(statusId);
+  }
+}
+
+function processQRScan() {
+  const val = document.getElementById('scan-manual-input').value.trim();
+  if (!val) { toast('Masukkan ID order atau No. Order terlebih dahulu', 'error'); return; }
+
+  // Support: full URL, Firestore doc ID, or No. Order (e.g. PF-240603-AB12)
+  let orderId = val;
+  if (val.includes('?id=')) {
+    orderId = val.split('?id=')[1].split('&')[0];
+  } else if (val.includes('?status=')) {
+    orderId = val.split('?status=')[1].split('&')[0];
+  }
+
+  // If it looks like orderNo (e.g. PF-...), find the Firestore ID
+  const byOrderNo = orders.find(o => o.orderNo && o.orderNo.toUpperCase() === orderId.toUpperCase());
+  if (byOrderNo) orderId = byOrderNo.id;
+
+  showScanResult(orderId);
+}
+
+function showScanResult(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  const wrap = document.getElementById('scan-result-wrap');
+  wrap.style.display = 'block';
+
+  if (!order) {
+    wrap.innerHTML = `
+      <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:var(--r);padding:18px 20px;text-align:center;">
+        <i class="ti ti-alert-circle" style="font-size:28px;color:#dc2626;margin-bottom:8px;display:block;"></i>
+        <div style="font-weight:600;color:#991b1b;margin-bottom:4px;">Order tidak ditemukan</div>
+        <div style="font-size:12.5px;color:#b91c1c;">ID: <code>${escH(orderId)}</code></div>
+      </div>`;
+    return;
+  }
+
+  const statusInfo = {
+    antri: { icon: 'ti-clock', label: 'Menunggu Antrian', desc: 'Pesanan Anda sedang menunggu untuk diproses', cls: 'status-icon-antri' },
+    proses: { icon: 'ti-loader', label: 'Sedang Diproses', desc: 'Pesanan Anda sedang dalam pengerjaan', cls: 'status-icon-proses' },
+    selesai: { icon: 'ti-circle-check', label: 'Siap Diambil!', desc: 'Pesanan Anda sudah selesai dan siap untuk diambil', cls: 'status-icon-selesai' },
+    diambil: { icon: 'ti-package-export', label: 'Sudah Diambil', desc: 'Pesanan ini sudah diambil', cls: 'status-icon-diambil' },
+  };
+  const si = statusInfo[order.status] || statusInfo.antri;
+  const itemsStr = (order.items || []).map(it => `<span class="pickup-item-tag">${escH(it.qty)} ${escH(it.satuan)} ${escH(it.nama)}</span>`).join('');
+  const steps = ['antri','proses','selesai','diambil'];
+  const currentIdx = steps.indexOf(order.status);
+
+  const progressHtml = steps.map((s, i) => {
+    const lbl = { antri:'Antri', proses:'Proses', selesai:'Selesai', diambil:'Diambil' }[s];
+    const ic = { antri:'ti-clock', proses:'ti-loader', selesai:'ti-circle-check', diambil:'ti-package-export' }[s];
+    let dotCls = '';
+    let lblCls = '';
+    if (i < currentIdx) { dotCls = 'done'; lblCls = 'done'; }
+    else if (i === currentIdx) { dotCls = 'active'; lblCls = 'active'; }
+    return `
+      <div class="status-step">
+        <div class="status-step-dot ${dotCls}"><i class="ti ${ic}" style="font-size:14px;"></i></div>
+        <div class="status-step-label ${lblCls}">${lbl}</div>
+      </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="status-card" style="border-radius:var(--r);overflow:hidden;">
+      <div style="padding:18px 20px;background:var(--ink);color:#fff;">
+        <div style="font-family:var(--font-head);font-size:16px;font-weight:700;">${escH(order.nama)}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.45);margin-top:2px;">${order.tgl || '-'}</div>
+      </div>
+      <div style="padding:20px;">
+        <div class="status-progress">${progressHtml}</div>
+        <div style="text-align:center;padding:12px 0 16px;">
+          <div class="status-icon-wrap ${si.cls}" style="margin-bottom:10px;">
+            <i class="ti ${si.icon}"></i>
+          </div>
+          <div style="font-family:var(--font-head);font-size:18px;font-weight:700;margin-bottom:4px;">${si.label}</div>
+          <div style="font-size:13px;color:var(--muted);">${si.desc}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${itemsStr}</div>
+        ${order.status === 'selesai' ? `<button class="btn btn-primary" style="width:100%;" onclick="updateStatus('${order.id}','diambil');document.getElementById('scan-result-wrap').style.display='none';">
+          <i class="ti ti-package-export"></i> Konfirmasi Diambil
+        </button>` : ''}
+      </div>
+    </div>`;
+}
+
+// Konsumen status view via URL param
+function showOrderStatusForConsumer(orderId) {
+  // Navigate to scan-qr page and show result
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('[data-page="scan-qr"]').classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-scan-qr').classList.add('active');
+  document.getElementById('topbar-title').textContent = 'Status Pesanan';
+
+  // Wait for orders to load
+  const tryShow = () => {
+    if (orders.length > 0 || window._firebaseReady) {
+      showOrderStatusModal(orderId);
+    } else {
+      setTimeout(tryShow, 500);
+    }
+  };
+
+  setTimeout(() => showOrderStatusModal(orderId), 800);
+}
+
+function showOrderStatusModal(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  const body = document.getElementById('modal-status-body');
+  const footer = document.getElementById('modal-status-footer');
+
+  if (!order) {
+    body.innerHTML = `<div style="text-align:center;padding:20px;">
+      <i class="ti ti-alert-circle" style="font-size:36px;color:#dc2626;display:block;margin-bottom:12px;"></i>
+      <div style="font-weight:600;margin-bottom:6px;">Pesanan tidak ditemukan</div>
+      <div style="font-size:13px;color:var(--muted);">Pastikan QR code yang Anda scan benar.</div>
+    </div>`;
+    openModal('modal-status-konsumen');
+    return;
+  }
+
+  const statusInfo = {
+    antri: { icon: 'ti-clock', label: 'Menunggu Antrian', desc: 'Pesanan Anda sedang menunggu untuk diproses. Mohon bersabar ya! 🙏', cls: 'status-icon-antri' },
+    proses: { icon: 'ti-loader', label: 'Sedang Diproses', desc: 'Pesanan Anda sedang dalam pengerjaan. Hampir selesai! ✨', cls: 'status-icon-proses' },
+    selesai: { icon: 'ti-circle-check', label: '🎉 Siap Diambil!', desc: 'Pesanan Anda sudah selesai dan siap diambil. Silakan datang ke toko!', cls: 'status-icon-selesai' },
+    diambil: { icon: 'ti-package-export', label: 'Sudah Diambil', desc: 'Pesanan ini sudah diambil. Terima kasih! 💖', cls: 'status-icon-diambil' },
+  };
+
+  const si = statusInfo[order.status] || statusInfo.antri;
+  const steps = ['antri','proses','selesai','diambil'];
+  const currentIdx = steps.indexOf(order.status);
+
+  const progressHtml = steps.map((s, i) => {
+    const lbl = { antri:'Antri', proses:'Proses', selesai:'Selesai', diambil:'Diambil' }[s];
+    const ic = { antri:'ti-clock', proses:'ti-loader', selesai:'ti-circle-check', diambil:'ti-package-export' }[s];
+    let dotCls = '', lblCls = '';
+    if (i < currentIdx) { dotCls = 'done'; lblCls = 'done'; }
+    else if (i === currentIdx) { dotCls = 'active'; lblCls = 'active'; }
+    return `<div class="status-step">
+      <div class="status-step-dot ${dotCls}"><i class="ti ${ic}" style="font-size:14px;"></i></div>
+      <div class="status-step-label ${lblCls}">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  const itemsStr = (order.items || []).map(it =>
+    `<span class="pickup-item-tag">${escH(it.qty)} ${escH(it.satuan)} ${escH(it.nama)}</span>`
+  ).join('');
+
+  body.innerHTML = `
+    <div class="status-progress" style="margin:4px 0 20px;">${progressHtml}</div>
+    <div class="status-hero">
+      <div class="status-icon-wrap ${si.cls}">
+        <i class="ti ${si.icon}"></i>
+      </div>
+      <div class="status-hero-label">${si.label}</div>
+      <div class="status-hero-desc">${si.desc}</div>
+    </div>
+    <div class="qr-order-info" style="margin-top:4px;">
+      <div class="qr-nama">${escH(order.nama)}</div>
+      <div class="qr-meta" style="margin-top:6px;">${order.tgl ? '📅 ' + order.tgl : ''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;">${itemsStr}</div>
+      ${order.catatan ? `<div style="font-size:12px;color:var(--muted);margin-top:8px;"><i class="ti ti-notes"></i> ${escH(order.catatan)}</div>` : ''}
+    </div>
+  `;
+
+  openModal('modal-status-konsumen');
 }
 
 // keyboard shortcut
