@@ -1372,7 +1372,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
       </button>
     </div>
 
-    <button class="login-btn" onclick="doLogin()">
+    <button class="login-btn" id="btn-login" onclick="doLogin()">
       <i class="ti ti-login"></i> Masuk
     </button>
 
@@ -2553,9 +2553,8 @@ document.addEventListener('keydown', e => {
 });
 
 // ==============================
-// LOGIN SYSTEM
+// LOGIN SYSTEM (SECURE — key dari Firestore, bukan hardcode)
 // ==============================
-const VALID_KEYS = ['ironman10', 'republikindonesia45'];
 const SESSION_KEY = 'pf_auth_session';
 
 function toggleKeyVisibility() {
@@ -2578,22 +2577,83 @@ function checkLoginSession() {
   }
 }
 
-function doLogin() {
+async function doLogin() {
   const input = document.getElementById('login-key-input');
   const errEl = document.getElementById('login-error');
+  const btnLogin = document.getElementById('btn-login');
   const val = input.value.trim();
 
-  if (VALID_KEYS.includes(val)) {
-    sessionStorage.setItem(SESSION_KEY, 'authenticated');
-    document.getElementById('login-overlay').classList.add('hidden');
-    errEl.classList.remove('show');
-  } else {
+  if (!val) {
+    errEl.textContent = 'Masukkan access key terlebih dahulu.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  // Tampilkan loading
+  btnLogin.disabled = true;
+  btnLogin.textContent = 'Memverifikasi...';
+
+  try {
+    // Tunggu Firebase siap
+    await waitForFirebase();
+
+    // Hash key dengan SHA-256 sebelum dikirim ke Firestore
+    const hashedKey = await sha256(val);
+
+    // Cek ke koleksi 'access_keys' di Firestore
+    // Setiap dokumen: { hash: "<sha256-dari-key>", active: true }
+    const { getDocs, query: fsQuery, where, collection: fsCol } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const q = fsQuery(
+      fsCol(window._db, 'access_keys'),
+      where('hash', '==', hashedKey),
+      where('active', '==', true)
+    );
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      sessionStorage.setItem(SESSION_KEY, 'authenticated');
+      document.getElementById('login-overlay').classList.add('hidden');
+      errEl.classList.remove('show');
+    } else {
+      throw new Error('Key tidak valid');
+    }
+  } catch (err) {
+    errEl.textContent = 'Access key salah atau tidak aktif.';
     errEl.classList.add('show');
     input.classList.add('error-shake');
     input.value = '';
     input.focus();
     setTimeout(() => input.classList.remove('error-shake'), 500);
+  } finally {
+    btnLogin.disabled = false;
+    btnLogin.textContent = 'Masuk';
   }
+}
+
+// Tunggu Firebase siap (max 5 detik)
+function waitForFirebase() {
+  return new Promise((resolve, reject) => {
+    if (window._firebaseReady && window._db) return resolve();
+    let elapsed = 0;
+    const interval = setInterval(() => {
+      elapsed += 100;
+      if (window._firebaseReady && window._db) {
+        clearInterval(interval);
+        resolve();
+      } else if (elapsed > 5000) {
+        clearInterval(interval);
+        reject(new Error('Firebase timeout'));
+      }
+    }, 100);
+  });
+}
+
+// Hash SHA-256 (built-in browser API, tidak butuh library)
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 // Cek session saat halaman dimuat
