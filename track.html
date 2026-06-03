@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cek Status Pesanan — PrintFlow</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0f0e17;
+  --paper: #fffcf5;
+  --paper2: #f5f0e8;
+  --accent: #e84855;
+  --green: #22c55e;
+  --muted: #6b6560;
+  --border: rgba(15,14,23,0.12);
+  --card: #ffffff;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* HEADER */
+.top-header {
+  width: 100%;
+  background: var(--ink);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-mark {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.logo-mark span { color: var(--accent); }
+.logo-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* MAIN */
+.main-wrap {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px 20px 48px;
+  flex: 1;
+}
+
+/* SEARCH CARD */
+.search-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 16px rgba(15,14,23,0.06);
+}
+.search-card h2 {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.search-card p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.search-row { display: flex; gap: 10px; }
+.search-input {
+  flex: 1;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--paper);
+  outline: none;
+  transition: border 0.15s;
+}
+.search-input:focus { border-color: var(--accent); }
+
+/* BUTTON */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 18px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #d63545; }
+.btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+
+/* STATUS CARD */
+.status-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(15,14,23,0.1);
+  animation: fadeUp 0.3s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.status-card-header {
+  padding: 20px 24px;
+  background: var(--ink);
+  color: #fff;
+}
+.order-no-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-family: monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 8px;
+}
+.customer-name {
+  font-family: var(--font-head);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin-bottom: 2px;
+}
+.order-date { font-size: 12px; color: rgba(255,255,255,0.45); }
+.status-card-body { padding: 24px; }
+
+/* PROGRESS */
+.status-progress {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  position: relative;
+}
+.status-progress::before {
+  content: '';
+  position: absolute;
+  left: 18px; right: 18px; top: 18px;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+  flex: 1;
+}
+.status-step-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--paper2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--muted);
+  transition: all 0.3s;
+}
+.status-step-dot.done  { background: var(--green); border-color: var(--green); color: #fff; }
+.status-step-dot.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 0 5px rgba(232,72,85,0.15); }
+.status-step-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; text-transform: uppercase; text-align: center; }
+.status-step-label.active { color: var(--accent); }
+.status-step-label.done   { color: var(--green); }
+
+/* STATUS HERO */
+.status-hero { text-align: center; padding: 8px 0 24px; }
+.status-icon-wrap {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 36px;
+}
+.si-antri  { background: #fef3c7; color: #d97706; }
+.si-proses { background: #dbeafe; color: #2563eb; }
+.si-selesai{ background: #dcfce7; color: #16a34a; }
+.si-diambil{ background: #f3f4f6; color: #6b7280; }
+.status-hero-label { font-family: var(--font-head); font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.status-hero-desc  { font-size: 13.5px; color: var(--muted); line-height: 1.6; max-width: 300px; margin: 0 auto; }
+
+/* ITEMS */
+.items-section { background: var(--paper2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.items-section-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.item-tag { display: inline-flex; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; margin: 3px 3px 3px 0; }
+.notes-row { display: flex; align-items: flex-start; gap: 7px; font-size: 12.5px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+
+/* REALTIME BADGE */
+.live-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #dcfce7; color: #166534;
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 11.5px; font-weight: 600;
+  margin-bottom: 16px;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* STATE BOXES */
+.state-box { text-align: center; padding: 40px 20px; }
+.state-box i { font-size: 44px; display: block; margin-bottom: 12px; }
+.state-box.error i { color: #dc2626; }
+.state-box.loading i { color: var(--muted); opacity: 0.4; }
+.state-box h3 { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.state-box p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* FOOTER */
+.page-footer { width: 100%; padding: 20px; text-align: center; font-size: 11px; color: rgba(15,14,23,0.25); }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@media (max-width: 480px) {
+  .main-wrap { padding: 20px 16px 40px; }
+  .status-card-body { padding: 18px; }
+  .search-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-header">
+  <div>
+    <div class="logo-mark">Print<span>Flow</span></div>
+    <div class="logo-sub">Digital Printing</div>
+  </div>
+</div>
+
+<div class="main-wrap">
+  <div class="search-card">
+    <h2><i class="ti ti-package-search" style="font-size:18px;vertical-align:-2px;margin-right:6px;"></i>Cek Status Pesanan</h2>
+    <p>Masukkan <strong>No. Order</strong> yang diberikan saat memesan (contoh: <code>PF-240603-AB12</code>).</p>
+    <div class="search-row">
+      <input class="search-input" id="order-input" placeholder="No. Order atau ID pesanan...">
+      <button class="btn btn-primary" id="search-btn">
+        <i class="ti ti-search"></i> Cek
+      </button>
+    </div>
+  </div>
+
+  <div id="result-area"></div>
+</div>
+
+<div class="page-footer">PrintFlow &copy; 2024 &mdash; Manajemen Digital Printing</div>
+
+<!-- SEMUA LOGIKA DALAM SATU MODULE AGAR FIREBASE DAPAT DIAKSES -->
+<script type="module">
+import { initializeApp }                                        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc,
+         collection, query, where, getDocs,
+         onSnapshot }                                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ==============================
+// FIREBASE CONFIG
+// ==============================
+const firebaseConfig = {
+  apiKey: "AIzaSyBAsOwRFJCCoRGJZsxAjhEh4lTZHaOvjt4",
+  authDomain: "printflowprintcess.firebaseapp.com",
+  projectId: "printflowprintcess",
+  storageBucket: "printflowprintcess.firebasestorage.app",
+  messagingSenderId: "811033721706",
+  appId: "1:811033721706:web:251271e696dab20a6a8313",
+  measurementId: "G-1XGTXCC368"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// Unsubscribe handle untuk real-time listener
+let unsubscribeLive = null;
+
+// ==============================
+// UTILS
+// ==============================
+function escH(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showLoading() {
+  document.getElementById('result-area').innerHTML = `
+    <div class="status-card" style="border-radius:16px;">
+      <div class="state-box loading">
+        <i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i>
+        <h3>Memuat data pesanan...</h3>
+        <p>Mohon tunggu sebentar.</p>
+      </div>
+    </div>`;
+}
+
+function showNotFound(input) {
+  document.getElementById('result-area').innerHTML = `
+    <div class="status-card" style="border-radius:16px;">
+      <div class="state-box error">
+        <i class="ti ti-mood-sad"></i>
+        <h3>Pesanan Tidak Ditemukan</h3>
+        <p>No. Order <strong>${escH(input)}</strong> tidak ditemukan di sistem kami.<br>
+        Pastikan No. Order yang Anda masukkan sudah benar.</p>
+      </div>
+    </div>`;
+}
+
+function showError(msg) {
+  document.getElementById('result-area').innerHTML = `
+    <div class="status-card" style="border-radius:16px;">
+      <div class="state-box error">
+        <i class="ti ti-wifi-off"></i>
+        <h3>Gagal Memuat Data</h3>
+        <p>${escH(msg)}</p>
+      </div>
+    </div>`;
+}
+
+// ==============================
+// RENDER STATUS
+// ==============================
+function renderStatus(order) {
+  const statusInfo = {
+    antri:   { icon:'ti-clock',          label:'Menunggu Antrian', desc:'Pesanan Anda sudah kami terima dan sedang menunggu giliran. Mohon bersabar ya! 🙏', cls:'si-antri'  },
+    proses:  { icon:'ti-loader',         label:'Sedang Diproses',  desc:'Kami sedang mengerjakan pesanan Anda. Hampir selesai! ✨',                           cls:'si-proses' },
+    selesai: { icon:'ti-circle-check',   label:'🎉 Siap Diambil!', desc:'Pesanan Anda sudah selesai dan siap diambil di toko. Silakan datang!',               cls:'si-selesai'},
+    diambil: { icon:'ti-package-export', label:'Sudah Diambil',    desc:'Pesanan ini sudah diambil. Terima kasih telah mempercayai kami! 💖',                 cls:'si-diambil'},
+  };
+  const si = statusInfo[order.status] || statusInfo.antri;
+
+  const steps     = ['antri','proses','selesai','diambil'];
+  const stepLabel = { antri:'Antri', proses:'Proses', selesai:'Selesai', diambil:'Diambil' };
+  const stepIcon  = { antri:'ti-clock', proses:'ti-loader', selesai:'ti-circle-check', diambil:'ti-package-export' };
+  const currentIdx = steps.indexOf(order.status);
+
+  const progressHtml = steps.map((s, i) => {
+    let dotCls = '', lblCls = '';
+    if (i < currentIdx)       { dotCls = 'done';   lblCls = 'done'; }
+    else if (i === currentIdx){ dotCls = 'active';  lblCls = 'active'; }
+    return `<div class="status-step">
+      <div class="status-step-dot ${dotCls}"><i class="ti ${stepIcon[s]}" style="font-size:14px;"></i></div>
+      <div class="status-step-label ${lblCls}">${stepLabel[s]}</div>
+    </div>`;
+  }).join('');
+
+  const itemsHtml = (order.items || []).map(it =>
+    `<span class="item-tag">
+       <i class="ti ti-box" style="font-size:12px;margin-right:4px;opacity:0.5;"></i>
+       ${escH(it.qty)} ${escH(it.satuan)} ${escH(it.nama)}
+     </span>`
+  ).join('');
+
+  const orderNo = order.orderNo || order.id.slice(0, 8).toUpperCase();
+
+  document.getElementById('result-area').innerHTML = `
+    <div style="text-align:center;margin-bottom:14px;">
+      <span class="live-badge"><span class="live-dot"></span> Live — status diperbarui otomatis</span>
+    </div>
+    <div class="status-card">
+      <div class="status-card-header">
+        <div class="order-no-badge"><i class="ti ti-hash" style="font-size:10px;"></i> ${escH(orderNo)}</div>
+        <div class="customer-name">${escH(order.nama)}</div>
+        <div class="order-date">${order.tgl ? '📅 ' + escH(order.tgl) : ''}</div>
+      </div>
+      <div class="status-card-body">
+        <div class="status-progress">${progressHtml}</div>
+        <div class="status-hero">
+          <div class="status-icon-wrap ${si.cls}"><i class="ti ${si.icon}"></i></div>
+          <div class="status-hero-label">${si.label}</div>
+          <div class="status-hero-desc">${si.desc}</div>
+        </div>
+        ${itemsHtml ? `<div class="items-section">
+          <div class="items-section-label">Detail Item</div>
+          <div>${itemsHtml}</div>
+        </div>` : ''}
+        ${order.catatan ? `<div class="notes-row">
+          <i class="ti ti-notes" style="font-size:15px;margin-top:1px;flex-shrink:0;"></i>
+          <span>${escH(order.catatan)}</span>
+        </div>` : ''}
+        ${order.wa ? `<a href="https://wa.me/62${order.wa.replace(/^0/,'')}" target="_blank"
+          style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#22c55e;text-decoration:none;margin-top:4px;">
+          <i class="ti ti-brand-whatsapp"></i> Hubungi kami via WhatsApp
+        </a>` : ''}
+      </div>
+    </div>`;
+}
+
+// ==============================
+// LOAD ORDER + REAL-TIME LISTENER
+// ==============================
+async function loadOrder(input) {
+  if (!input) return;
+
+  // Hentikan listener sebelumnya jika ada
+  if (unsubscribeLive) { unsubscribeLive(); unsubscribeLive = null; }
+
+  showLoading();
+  document.getElementById('search-btn').disabled = true;
+
+  try {
+    let docId = null;
+
+    // 1) Coba langsung sebagai Firestore doc ID
+    try {
+      const snap = await getDoc(doc(db, 'orders', input));
+      if (snap.exists()) docId = snap.id;
+    } catch(_) { /* bukan format doc ID yang valid */ }
+
+    // 2) Coba cari berdasarkan field orderNo
+    if (!docId) {
+      const q   = query(collection(db, 'orders'), where('orderNo', '==', input.toUpperCase()));
+      const snp = await getDocs(q);
+      if (!snp.empty) docId = snp.docs[0].id;
+    }
+
+    if (!docId) {
+      showNotFound(input);
+      document.getElementById('search-btn').disabled = false;
+      return;
+    }
+
+    // 3) Pasang real-time listener pada dokumen yang ditemukan
+    unsubscribeLive = onSnapshot(
+      doc(db, 'orders', docId),
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          showNotFound(input);
+          return;
+        }
+        renderStatus({ id: snapshot.id, ...snapshot.data() });
+      },
+      (err) => {
+        console.error('onSnapshot error:', err);
+        showError('Koneksi terputus. Muat ulang halaman untuk mencoba lagi.');
+      }
+    );
+
+  } catch(e) {
+    console.error(e);
+    showError('Gagal memuat data. Periksa koneksi internet Anda, lalu coba lagi.');
+  } finally {
+    document.getElementById('search-btn').disabled = false;
+  }
+}
+
+// ==============================
+// EVENT: tombol cek & Enter
+// ==============================
+function doSearch() {
+  const val = document.getElementById('order-input').value.trim();
+  if (!val) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('id', val);
+  window.history.replaceState({}, '', url);
+  loadOrder(val);
+}
+
+document.getElementById('search-btn').addEventListener('click', doSearch);
+document.getElementById('order-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+// ==============================
+// AUTO-LOAD dari URL ?id= atau ?status=
+// ==============================
+const params = new URLSearchParams(window.location.search);
+const autoId = params.get('id') || params.get('status');
+if (autoId) {
+  document.getElementById('order-input').value = autoId;
+  loadOrder(autoId);
+}
+</script>
+</body>
+</html>
