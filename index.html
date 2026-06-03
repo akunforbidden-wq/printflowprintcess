@@ -1166,9 +1166,227 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 }
 
 .config-note i { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+/* ====== LOGIN OVERLAY ====== */
+#login-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+#login-overlay.hidden {
+  display: none;
+}
+
+.login-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+  text-align: center;
+}
+
+.login-logo {
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.login-logo span { color: var(--accent); }
+
+.login-sub {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.login-title {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+.login-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.login-input-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.login-input-wrap i.login-icon-left {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.login-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--muted);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  z-index: 2;
+}
+
+.login-toggle-btn:hover {
+  color: var(--ink);
+  background: var(--paper2);
+}
+
+.login-input {
+  width: 100%;
+  padding: 13px 46px 13px 44px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper);
+  outline: none;
+  transition: border 0.15s;
+  letter-spacing: 1px;
+}
+
+.login-input:focus { border-color: var(--accent); }
+.login-input.error-shake { border-color: #dc2626; animation: shake 0.4s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.login-btn:hover { background: #d63545; }
+
+.login-error {
+  color: #dc2626;
+  font-size: 12.5px;
+  margin-top: 10px;
+  display: none;
+}
+
+.login-error.show { display: block; }
+
+.login-lock-icon {
+  width: 56px;
+  height: 56px;
+  background: #fee2e2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 26px;
+  color: var(--accent);
+}
+
+.login-footer {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 20px;
+  opacity: 0.6;
+}
+
 </style>
 </head>
 <body>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">Print<span>Flow</span></div>
+    <div class="login-sub">Digital Printing</div>
+
+    <div class="login-lock-icon">
+      <i class="ti ti-lock"></i>
+    </div>
+
+    <div class="login-title">Masuk ke Dashboard</div>
+    <div class="login-desc">Masukkan KEY akses untuk melanjutkan ke panel manajemen.</div>
+
+    <div class="login-input-wrap">
+      <i class="ti ti-key login-icon-left"></i>
+      <input
+        class="login-input"
+        id="login-key-input"
+        type="password"
+        placeholder="Masukkan KEY akses..."
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') doLogin()"
+      >
+      <button class="login-toggle-btn" type="button" onclick="toggleKeyVisibility()" id="eye-btn" title="Tampilkan/sembunyikan KEY">
+        <i class="ti ti-eye" id="eye-icon"></i>
+      </button>
+    </div>
+
+    <button class="login-btn" onclick="doLogin()">
+      <i class="ti ti-login"></i> Masuk
+    </button>
+
+    <div class="login-error" id="login-error">
+      <i class="ti ti-alert-circle" style="font-size:13px;vertical-align:-1px;"></i>
+      KEY salah. Coba lagi.
+    </div>
+
+    <div class="login-footer">
+      Area terbatas &mdash; hanya untuk pengelola toko
+    </div>
+  </div>
+</div>
+
 
 <!-- ===== SIDEBAR ===== -->
 <nav id="sidebar">
@@ -2333,6 +2551,54 @@ document.addEventListener('keydown', e => {
     openNewOrder();
   }
 });
+
+// ==============================
+// LOGIN SYSTEM
+// ==============================
+const VALID_KEYS = ['ironman10', 'republikindonesia45'];
+const SESSION_KEY = 'pf_auth_session';
+
+function toggleKeyVisibility() {
+  const input = document.getElementById('login-key-input');
+  const icon  = document.getElementById('eye-icon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'ti ti-eye-off';
+  } else {
+    input.type = 'password';
+    icon.className = 'ti ti-eye';
+  }
+  input.focus();
+}
+
+function checkLoginSession() {
+  const session = sessionStorage.getItem(SESSION_KEY);
+  if (session === 'authenticated') {
+    document.getElementById('login-overlay').classList.add('hidden');
+  }
+}
+
+function doLogin() {
+  const input = document.getElementById('login-key-input');
+  const errEl = document.getElementById('login-error');
+  const val = input.value.trim();
+
+  if (VALID_KEYS.includes(val)) {
+    sessionStorage.setItem(SESSION_KEY, 'authenticated');
+    document.getElementById('login-overlay').classList.add('hidden');
+    errEl.classList.remove('show');
+  } else {
+    errEl.classList.add('show');
+    input.classList.add('error-shake');
+    input.value = '';
+    input.focus();
+    setTimeout(() => input.classList.remove('error-shake'), 500);
+  }
+}
+
+// Cek session saat halaman dimuat
+checkLoginSession();
+
 </script>
 </body>
 </html>
