@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintFlow — Manajemen Digital Printing</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+<!-- ===== FIREBASE CONFIG ===== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ⚠️ GANTI DENGAN KONFIGURASI FIREBASE ANDA
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window._db = db;
+  window._col = collection;
+  window._doc = doc;
+  window._addDoc = addDoc;
+  window._updateDoc = updateDoc;
+  window._deleteDoc = deleteDoc;
+  window._onSnapshot = onSnapshot;
+  window._serverTimestamp = serverTimestamp;
+  window._query = query;
+  window._orderBy = orderBy;
+  window._firebaseReady = true;
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0f0e17;
+  --paper: #fffcf5;
+  --paper2: #f5f0e8;
+  --accent: #e84855;
+  --accent2: #ff6b35;
+  --teal: #0ea5e9;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --purple: #8b5cf6;
+  --muted: #6b6560;
+  --border: rgba(15,14,23,0.12);
+  --card: #ffffff;
+  --shadow: 0 2px 16px rgba(15,14,23,0.08);
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --r: 12px;
+  --sidebar: 220px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ====== SIDEBAR ====== */
+#sidebar {
+  width: var(--sidebar);
+  min-height: 100vh;
+  background: var(--ink);
+  position: fixed;
+  left: 0; top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.logo-mark {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.logo-mark span { color: var(--accent); }
+
+.logo-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.5);
+  font-size: 13.5px;
+  font-weight: 400;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.nav-item i { font-size: 17px; flex-shrink: 0; }
+
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+.nav-item.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--accent2);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+}
+
+.firebase-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.firebase-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  transition: background 0.3s;
+}
+
+.firebase-dot.connected { background: var(--green); }
+
+/* ====== MAIN ====== */
+#main {
+  margin-left: var(--sidebar);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====== HEADER ====== */
+#topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(255,252,245,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+
+.topbar-title {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ====== BUTTONS ====== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover { background: #d63545; }
+
+.btn-secondary {
+  background: var(--paper2);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover { background: #ebe6dc; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover { background: var(--paper2); color: var(--ink); }
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-icon {
+  padding: 8px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-size: 17px;
+}
+
+.btn-icon:hover { background: var(--paper2); color: var(--ink); }
+
+.btn-danger { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+.btn-danger:hover { background: #fecaca; }
+
+/* ====== PAGES ====== */
+.page { display: none; padding: 28px; }
+.page.active { display: block; }
+
+/* ====== STATS ====== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  transition: transform 0.15s;
+}
+
+.stat-card:hover { transform: translateY(-2px); }
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.stat-icon {
+  float: right;
+  font-size: 24px;
+  opacity: 0.2;
+  margin-top: -4px;
+}
+
+/* ====== SECTION HEADER ====== */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+/* ====== SEARCH BAR ====== */
+.search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 280px;
+}
+
+.search-wrap i {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  background: var(--card);
+  color: var(--ink);
+  outline: none;
+  transition: border 0.15s;
+}
+
+.search-input:focus { border-color: var(--accent); }
+
+/* ====== TABLE ====== */
+.table-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--paper2);
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--paper); }
+
+tbody td {
+  padding: 13px 16px;
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.td-name {
+  font-weight: 500;
+}
+
+/* ====== STATUS BADGES ====== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.badge-antri { background: #fef3c7; color: #92400e; }
+.badge-proses { background: #dbeafe; color: #1e40af; }
+.badge-selesai { background: #dcfce7; color: #166534; }
+.badge-diambil { background: #f3f4f6; color: #4b5563; }
+.badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ====== MODAL ====== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,14,23,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--card);
+  border-radius: 16px;
+  width: 560px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.2s;
+  box-shadow: 0 24px 60px rgba(15,14,23,0.2);
+}
+
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+.modal-header {
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.modal-body { padding: 20px 24px; }
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ====== FORM ====== */
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--ink);
+  background: var(--card);
+  outline: none;
+  transition: border 0.15s;
+}
+
+.form-control:focus { border-color: var(--accent); }
+
+select.form-control { cursor: pointer; }
+
+textarea.form-control { resize: vertical; min-height: 72px; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ====== ITEM LIST IN ORDER ====== */
+.items-list {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 32px;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  background: var(--paper);
+}
+
+.item-row:last-child { border-bottom: none; }
+
+.item-row input {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--card);
+  outline: none;
+  width: 100%;
+}
+
+.item-row input:focus { border-color: var(--accent); }
+
+.item-del-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+
+.item-del-btn:hover { background: #fee2e2; }
+
+.item-header {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 32px;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--paper2);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ====== KANBAN BOARD ====== */
+.kanban-wrap {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.kanban-col {
+  background: var(--paper2);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.kanban-header {
+  padding: 14px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid transparent;
+}
+
+.kh-antri { border-color: #f59e0b; color: #92400e; background: #fef3c7; }
+.kh-proses { border-color: #3b82f6; color: #1e40af; background: #dbeafe; }
+.kh-selesai { border-color: #22c55e; color: #166534; background: #dcfce7; }
+.kh-diambil { border-color: #6b7280; color: #374151; background: #f3f4f6; }
+
+.kanban-count {
+  background: rgba(255,255,255,0.7);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.kanban-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 80px;
+}
+
+.kcard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 1px 4px rgba(15,14,23,0.05);
+}
+
+.kcard:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(232,72,85,0.12);
+}
+
+.kcard-name {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.kcard-date {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.kcard-items {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.kcard-item-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.kcard-item-dot {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.kcard-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* ====== PICKUP PAGE ====== */
+.pickup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pickup-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.15s;
+}
+
+.pickup-card:hover { border-color: var(--teal); }
+
+.pickup-info { flex: 1; }
+
+.pickup-name {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+
+.pickup-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.pickup-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pickup-item-tag {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 11.5px;
+  color: var(--ink);
+}
+
+.pickup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+/* ====== EMPTY STATE ====== */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--muted);
+}
+
+.empty-state i {
+  font-size: 40px;
+  opacity: 0.3;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+/* ====== TOAST ====== */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.toast {
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastIn 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.toast.success { background: #166534; }
+.toast.error { background: #991b1b; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ====== MOBILE MENU ====== */
+#menu-toggle {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+/* ====== FILTER ROW ====== */
+.filter-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  transition: all 0.15s;
+}
+
+.filter-btn.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+/* ====== PRINT LABEL ====== */
+@media print {
+  #sidebar, #topbar, .no-print { display: none !important; }
+  #main { margin-left: 0 !important; }
+  .page { display: block !important; padding: 0 !important; }
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 900px) {
+  :root { --sidebar: 0px; }
+  #sidebar { transform: translateX(-220px); width: 220px; }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  #menu-toggle { display: flex; }
+  .kanban-wrap { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 580px) {
+  .kanban-wrap { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ====== ANIMATION ====== */
+.page.active > * {
+  animation: fadeSlide 0.25s ease both;
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ====== DETAIL MODAL ITEMS ====== */
+.detail-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.detail-item-row:last-child { border-bottom: none; }
+
+.detail-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* ====== NOTE TAG ====== */
+.config-note {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #92400e;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.config-note i { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">Print<span>Flow</span></div>
+    <div class="logo-sub">Digital Printing</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-item active" data-page="dashboard">
+      <i class="ti ti-layout-dashboard"></i> Dashboard
+    </div>
+    <div class="nav-item" data-page="produksi">
+      <i class="ti ti-printer"></i> Board Produksi
+      <span class="nav-badge" id="badge-produksi">0</span>
+    </div>
+    <div class="nav-item" data-page="pengambilan">
+      <i class="ti ti-package"></i> Pengambilan
+      <span class="nav-badge" id="badge-pickup">0</span>
+    </div>
+    <div class="nav-item" data-page="riwayat">
+      <i class="ti ti-history"></i> Riwayat
+    </div>
+    <div class="nav-item" data-page="settings">
+      <i class="ti ti-settings"></i> Pengaturan
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="firebase-status">
+      <div class="firebase-dot" id="firebase-dot"></div>
+      <span id="firebase-status-text">Menghubungkan...</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<div id="main">
+  <header id="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button id="menu-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" onclick="openNewOrder()">
+        <i class="ti ti-plus"></i> Order Baru
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== DASHBOARD PAGE ===== -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <i class="ti ti-file-invoice stat-icon"></i>
+        <div class="stat-label">Total Order</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <i class="ti ti-loader stat-icon"></i>
+        <div class="stat-label">Dalam Proses</div>
+        <div class="stat-value" id="stat-proses">0</div>
+      </div>
+      <div class="stat-card">
+        <i class="ti ti-circle-check stat-icon"></i>
+        <div class="stat-label">Siap Diambil</div>
+        <div class="stat-value" id="stat-selesai">0</div>
+      </div>
+      <div class="stat-card">
+        <i class="ti ti-package-export stat-icon"></i>
+        <div class="stat-label">Sudah Diambil</div>
+        <div class="stat-value" id="stat-diambil">0</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Order Terbaru</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Konsumen</th>
+            <th>Item</th>
+            <th>Tgl Order</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-recent">
+          <tr><td colspan="5"><div class="empty-state"><i class="ti ti-inbox"></i><p>Belum ada order</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PRODUKSI PAGE ===== -->
+  <div class="page" id="page-produksi">
+    <div class="section-header" style="margin-bottom:20px;">
+      <div class="search-wrap" style="max-width:300px;">
+        <i class="ti ti-search"></i>
+        <input class="search-input" id="search-prod" placeholder="Cari konsumen..." oninput="renderKanban()">
+      </div>
+    </div>
+    <div class="kanban-wrap" id="kanban-board"></div>
+  </div>
+
+  <!-- ===== PENGAMBILAN PAGE ===== -->
+  <div class="page" id="page-pengambilan">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input class="search-input" id="search-pickup" placeholder="Cari nama konsumen..." oninput="renderPickup()">
+      </div>
+    </div>
+    <div class="filter-row" id="filter-pickup">
+      <button class="filter-btn active" data-f="selesai" onclick="setPickupFilter('selesai',this)">Siap Diambil</button>
+      <button class="filter-btn" data-f="diambil" onclick="setPickupFilter('diambil',this)">Sudah Diambil</button>
+      <button class="filter-btn" data-f="all" onclick="setPickupFilter('all',this)">Semua</button>
+    </div>
+    <div class="pickup-list" id="pickup-list"></div>
+  </div>
+
+  <!-- ===== RIWAYAT PAGE ===== -->
+  <div class="page" id="page-riwayat">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input class="search-input" id="search-riwayat" placeholder="Cari konsumen..." oninput="renderRiwayat()">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Konsumen</th>
+            <th>Item</th>
+            <th>Tgl Order</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-riwayat">
+          <tr><td colspan="5"><div class="empty-state"><i class="ti ti-inbox"></i><p>Belum ada data</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS PAGE ===== -->
+  <div class="page" id="page-settings">
+    <div class="config-note">
+      <i class="ti ti-alert-triangle"></i>
+      <div>
+        <strong>Konfigurasi Firebase diperlukan.</strong> Buka file HTML ini dengan editor teks, cari bagian <code>firebaseConfig</code> di bagian atas, lalu isi dengan konfigurasi Firebase project Anda. Buat project di <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Firestore Database.
+      </div>
+    </div>
+    <div class="table-wrap" style="padding:24px;">
+      <div class="section-title" style="margin-bottom:16px;">Informasi Aplikasi</div>
+      <div class="detail-item-row">
+        <span class="detail-label">Versi</span>
+        <span>1.0.0</span>
+      </div>
+      <div class="detail-item-row">
+        <span class="detail-label">Firebase Status</span>
+        <span id="settings-fb-status">Mengecek...</span>
+      </div>
+      <div class="detail-item-row">
+        <span class="detail-label">Total Order</span>
+        <span id="settings-total">0</span>
+      </div>
+      <div class="detail-item-row">
+        <span class="detail-label">Nama Toko</span>
+        <input class="form-control" id="store-name" value="Digital Printing Saya" style="max-width:240px;padding:6px 10px;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ORDER ===== -->
+<div class="modal-overlay" id="modal-order">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-order-title">Order Baru</div>
+      <button class="btn-icon" onclick="closeModal('modal-order')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nama Konsumen *</label>
+          <input class="form-control" id="f-nama" placeholder="cth: Budi Santoso">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. WhatsApp</label>
+          <input class="form-control" id="f-wa" placeholder="cth: 08123456789">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tanggal Order</label>
+        <input type="date" class="form-control" id="f-tgl">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Daftar Item <span style="color:var(--muted);font-weight:400;">(bisa lebih dari satu)</span></label>
+        <div class="items-list" id="items-container">
+          <div class="item-header">
+            <span>Nama Barang</span><span>Qty</span><span>Satuan</span><span></span>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="addItemRow()" style="margin-top:8px;">
+          <i class="ti ti-plus"></i> Tambah Item
+        </button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catatan</label>
+        <textarea class="form-control" id="f-catatan" placeholder="Catatan tambahan (warna, ukuran, dll)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-order')">Batal</button>
+      <button class="btn btn-primary" onclick="saveOrder()">
+        <i class="ti ti-device-floppy"></i> Simpan Order
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL DETAIL ===== -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="detail-nama">Detail Order</div>
+      <button class="btn-icon" onclick="closeModal('modal-detail')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body" id="modal-detail-body"></div>
+    <div class="modal-footer" id="modal-detail-footer"></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast-container"></div>
+
+<script>
+// ==============================
+// STATE
+// ==============================
+let orders = [];
+let pickupFilter = 'selesai';
+let currentEditId = null;
+let unsubscribe = null;
+
+// ==============================
+// NAVIGATION
+// ==============================
+const pageNames = {
+  dashboard: 'Dashboard',
+  produksi: 'Board Produksi',
+  pengambilan: 'Pengambilan Barang',
+  riwayat: 'Riwayat Order',
+  settings: 'Pengaturan'
+};
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('topbar-title').textContent = pageNames[page];
+    if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+    renderCurrentPage(page);
+  });
+});
+
+function renderCurrentPage(page) {
+  if (page === 'dashboard') renderDashboard();
+  else if (page === 'produksi') renderKanban();
+  else if (page === 'pengambilan') renderPickup();
+  else if (page === 'riwayat') renderRiwayat();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ==============================
+// FIREBASE INIT
+// ==============================
+window.addEventListener('firebaseReady', initFirebase);
+window.addEventListener('load', () => {
+  if (window._firebaseReady) initFirebase();
+  // Set today's date in form
+  document.getElementById('f-tgl').valueAsDate = new Date();
+});
+
+function initFirebase() {
+  try {
+    const db = window._db;
+    const col = window._col;
+    const q = window._query(col(db, 'orders'), window._orderBy('createdAt', 'desc'));
+
+    unsubscribe = window._onSnapshot(q, (snapshot) => {
+      orders = [];
+      snapshot.forEach(doc => {
+        orders.push({ id: doc.id, ...doc.data() });
+      });
+      updateAllViews();
+      setFirebaseStatus(true);
+    }, (err) => {
+      console.error('Firestore error:', err);
+      setFirebaseStatus(false);
+    });
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    setFirebaseStatus(false);
+  }
+}
+
+function setFirebaseStatus(connected) {
+  const dot = document.getElementById('firebase-dot');
+  const txt = document.getElementById('firebase-status-text');
+  const stg = document.getElementById('settings-fb-status');
+  if (connected) {
+    dot.classList.add('connected');
+    txt.textContent = 'Tersinkronisasi';
+    if(stg) stg.textContent = '✅ Terhubung ke Firebase';
+  } else {
+    dot.classList.remove('connected');
+    txt.textContent = 'Tidak terhubung';
+    if(stg) stg.textContent = '❌ Tidak terhubung — cek konfigurasi';
+  }
+}
+
+// ==============================
+// UPDATE ALL VIEWS
+// ==============================
+function updateAllViews() {
+  renderDashboard();
+  renderKanban();
+  renderPickup();
+  renderRiwayat();
+  updateBadges();
+  document.getElementById('settings-total').textContent = orders.length;
+}
+
+function updateBadges() {
+  const inProd = orders.filter(o => ['antri','proses'].includes(o.status)).length;
+  const ready = orders.filter(o => o.status === 'selesai').length;
+  document.getElementById('badge-produksi').textContent = inProd;
+  document.getElementById('badge-pickup').textContent = ready;
+}
+
+// ==============================
+// MODAL HELPERS
+// ==============================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ==============================
+// ITEM ROWS
+// ==============================
+let itemRowCount = 0;
+
+function addItemRow(nama = '', qty = '', satuan = '') {
+  const container = document.getElementById('items-container');
+  const id = 'item-' + (++itemRowCount);
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.id = id;
+  row.innerHTML = `
+    <input placeholder="cth: Spanduk, Stiker, Banner..." value="${escH(nama)}" class="item-nama">
+    <input type="number" placeholder="1" value="${escH(qty)}" class="item-qty" min="1">
+    <input placeholder="pcs, m²..." value="${escH(satuan)}" class="item-satuan">
+    <button class="item-del-btn" onclick="removeItemRow('${id}')" title="Hapus">
+      <i class="ti ti-trash"></i>
+    </button>
+  `;
+  container.appendChild(row);
+}
+
+function removeItemRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function getItems() {
+  const rows = document.querySelectorAll('#items-container .item-row');
+  const items = [];
+  rows.forEach(row => {
+    const nama = row.querySelector('.item-nama').value.trim();
+    const qty = row.querySelector('.item-qty').value.trim();
+    const satuan = row.querySelector('.item-satuan').value.trim();
+    if (nama) items.push({ nama, qty: qty || '1', satuan: satuan || 'pcs' });
+  });
+  return items;
+}
+
+// ==============================
+// OPEN NEW ORDER MODAL
+// ==============================
+function openNewOrder() {
+  currentEditId = null;
+  document.getElementById('modal-order-title').textContent = 'Order Baru';
+  document.getElementById('f-nama').value = '';
+  document.getElementById('f-wa').value = '';
+  document.getElementById('f-catatan').value = '';
+  document.getElementById('f-tgl').valueAsDate = new Date();
+  // Clear items
+  const container = document.getElementById('items-container');
+  const rows = container.querySelectorAll('.item-row');
+  rows.forEach(r => r.remove());
+  itemRowCount = 0;
+  addItemRow();
+  openModal('modal-order');
+  setTimeout(() => document.getElementById('f-nama').focus(), 100);
+}
+
+function openEditOrder(id) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  currentEditId = id;
+  document.getElementById('modal-order-title').textContent = 'Edit Order';
+  document.getElementById('f-nama').value = order.nama || '';
+  document.getElementById('f-wa').value = order.wa || '';
+  document.getElementById('f-catatan').value = order.catatan || '';
+  document.getElementById('f-tgl').value = order.tgl || '';
+  // Clear and fill items
+  const container = document.getElementById('items-container');
+  const rows = container.querySelectorAll('.item-row');
+  rows.forEach(r => r.remove());
+  itemRowCount = 0;
+  const items = order.items || [];
+  if (items.length === 0) addItemRow();
+  else items.forEach(it => addItemRow(it.nama, it.qty, it.satuan));
+  closeModal('modal-detail');
+  openModal('modal-order');
+}
+
+// ==============================
+// SAVE ORDER
+// ==============================
+async function saveOrder() {
+  const nama = document.getElementById('f-nama').value.trim();
+  if (!nama) { toast('Nama konsumen wajib diisi!', 'error'); return; }
+  const items = getItems();
+  if (items.length === 0) { toast('Tambahkan minimal satu item!', 'error'); return; }
+
+  const data = {
+    nama,
+    wa: document.getElementById('f-wa').value.trim(),
+    tgl: document.getElementById('f-tgl').value,
+    catatan: document.getElementById('f-catatan').value.trim(),
+    items,
+    status: currentEditId ? orders.find(o => o.id === currentEditId)?.status || 'antri' : 'antri',
+  };
+
+  try {
+    if (currentEditId) {
+      await window._updateDoc(window._doc(window._db, 'orders', currentEditId), {
+        ...data, updatedAt: window._serverTimestamp()
+      });
+      toast('Order berhasil diperbarui!', 'success');
+    } else {
+      await window._addDoc(window._col(window._db, 'orders'), {
+        ...data, createdAt: window._serverTimestamp()
+      });
+      toast('Order baru berhasil disimpan!', 'success');
+    }
+    closeModal('modal-order');
+  } catch(e) {
+    console.error(e);
+    toast('Gagal menyimpan. Cek koneksi & konfigurasi Firebase.', 'error');
+  }
+}
+
+// ==============================
+// UPDATE STATUS
+// ==============================
+async function updateStatus(id, status) {
+  try {
+    await window._updateDoc(window._doc(window._db, 'orders', id), {
+      status, updatedAt: window._serverTimestamp(),
+      ...(status === 'diambil' ? { diambilAt: window._serverTimestamp() } : {})
+    });
+    toast('Status diperbarui!', 'success');
+    closeModal('modal-detail');
+  } catch(e) {
+    toast('Gagal update status.', 'error');
+  }
+}
+
+// ==============================
+// DELETE ORDER
+// ==============================
+async function deleteOrder(id) {
+  if (!confirm('Hapus order ini?')) return;
+  try {
+    await window._deleteDoc(window._doc(window._db, 'orders', id));
+    toast('Order dihapus.', 'success');
+    closeModal('modal-detail');
+  } catch(e) {
+    toast('Gagal menghapus.', 'error');
+  }
+}
+
+// ==============================
+// SHOW DETAIL
+// ==============================
+function showDetail(id) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  document.getElementById('detail-nama').textContent = order.nama;
+  const body = document.getElementById('modal-detail-body');
+  const footer = document.getElementById('modal-detail-footer');
+
+  const itemsHtml = (order.items || []).map(it =>
+    `<div class="detail-item-row">
+      <span style="font-size:13.5px;">${escH(it.nama)}</span>
+      <span style="color:var(--muted);font-size:13px;">${escH(it.qty)} ${escH(it.satuan)}</span>
+    </div>`
+  ).join('');
+
+  body.innerHTML = `
+    <div class="detail-item-row">
+      <span class="detail-label">Status</span>
+      ${badgeHtml(order.status)}
+    </div>
+    <div class="detail-item-row">
+      <span class="detail-label">Tanggal Order</span>
+      <span>${order.tgl || '-'}</span>
+    </div>
+    <div class="detail-item-row">
+      <span class="detail-label">WhatsApp</span>
+      <span>${order.wa ? `<a href="https://wa.me/62${order.wa.replace(/^0/,'')}${order.catatan?'?text='+encodeURIComponent('Halo '+order.nama+', pesanan Anda sudah selesai!'):''}">` + escH(order.wa) + '</a>' : '-'}</span>
+    </div>
+    ${order.catatan ? `<div class="detail-item-row"><span class="detail-label">Catatan</span><span style="font-size:13px;">${escH(order.catatan)}</span></div>` : ''}
+    <div style="margin-top:14px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Daftar Item</div>
+      ${itemsHtml || '<p style="color:var(--muted);font-size:13px;">Tidak ada item</p>'}
+    </div>
+  `;
+
+  // Footer buttons based on status
+  const s = order.status;
+  let statusBtns = '';
+  if (s === 'antri') statusBtns = `<button class="btn btn-secondary" onclick="updateStatus('${id}','proses')"><i class="ti ti-play"></i> Mulai Proses</button>`;
+  if (s === 'proses') statusBtns = `<button class="btn btn-secondary" onclick="updateStatus('${id}','selesai')"><i class="ti ti-circle-check"></i> Selesai</button>`;
+  if (s === 'selesai') statusBtns = `<button class="btn btn-primary" onclick="updateStatus('${id}','diambil')"><i class="ti ti-package-export"></i> Tandai Diambil</button>`;
+
+  footer.innerHTML = `
+    <button class="btn btn-ghost btn-sm btn-danger" onclick="deleteOrder('${id}')"><i class="ti ti-trash"></i></button>
+    <button class="btn btn-ghost btn-sm" onclick="openEditOrder('${id}')"><i class="ti ti-edit"></i> Edit</button>
+    <div style="flex:1"></div>
+    ${statusBtns}
+  `;
+
+  openModal('modal-detail');
+}
+
+// ==============================
+// DASHBOARD
+// ==============================
+function renderDashboard() {
+  const total = orders.length;
+  const proses = orders.filter(o => ['antri','proses'].includes(o.status)).length;
+  const selesai = orders.filter(o => o.status === 'selesai').length;
+  const diambil = orders.filter(o => o.status === 'diambil').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-proses').textContent = proses;
+  document.getElementById('stat-selesai').textContent = selesai;
+  document.getElementById('stat-diambil').textContent = diambil;
+
+  const recent = orders.slice(0, 10);
+  const tbody = document.getElementById('tbl-recent');
+  if (!recent.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="ti ti-inbox"></i><p>Belum ada order</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recent.map(o => `
+    <tr>
+      <td class="td-name">${escH(o.nama)}</td>
+      <td style="color:var(--muted);font-size:12.5px;">${(o.items||[]).map(i=>`${i.qty} ${i.satuan} ${i.nama}`).join(', ')}</td>
+      <td style="color:var(--muted);font-size:12.5px;">${o.tgl || '-'}</td>
+      <td>${badgeHtml(o.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="showDetail('${o.id}')"><i class="ti ti-eye"></i></button></td>
+    </tr>
+  `).join('');
+}
+
+// ==============================
+// KANBAN
+// ==============================
+function renderKanban() {
+  const q = document.getElementById('search-prod')?.value.toLowerCase() || '';
+  const filtered = orders.filter(o => !q || o.nama?.toLowerCase().includes(q));
+
+  const cols = [
+    { key: 'antri', label: 'Antri', cls: 'kh-antri', icon: 'ti-clock' },
+    { key: 'proses', label: 'Proses', cls: 'kh-proses', icon: 'ti-loader' },
+    { key: 'selesai', label: 'Selesai', cls: 'kh-selesai', icon: 'ti-circle-check' },
+    { key: 'diambil', label: 'Diambil', cls: 'kh-diambil', icon: 'ti-package-export' },
+  ];
+
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = cols.map(col => {
+    const colOrders = filtered.filter(o => o.status === col.key);
+    const cards = colOrders.length ? colOrders.map(o => {
+      const itemsHtml = (o.items || []).slice(0,3).map(it =>
+        `<div class="kcard-item-line"><div class="kcard-item-dot"></div><span>${escH(it.qty)} ${escH(it.satuan)} ${escH(it.nama)}</span></div>`
+      ).join('');
+      const more = (o.items||[]).length > 3 ? `<div style="color:var(--muted);font-size:10.5px;margin-top:3px;">+${(o.items.length-3)} item lagi</div>` : '';
+
+      let actionBtn = '';
+      if (col.key === 'antri') actionBtn = `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();updateStatus('${o.id}','proses')"><i class="ti ti-play"></i> Proses</button>`;
+      if (col.key === 'proses') actionBtn = `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();updateStatus('${o.id}','selesai')"><i class="ti ti-check"></i> Selesai</button>`;
+
+      return `
+        <div class="kcard" onclick="showDetail('${o.id}')">
+          <div class="kcard-name">${escH(o.nama)}</div>
+          <div class="kcard-date"><i class="ti ti-calendar" style="font-size:11px;"></i> ${o.tgl || '-'}</div>
+          <div class="kcard-items">${itemsHtml}${more}</div>
+          ${actionBtn ? `<div class="kcard-actions">${actionBtn}</div>` : ''}
+        </div>
+      `;
+    }).join('') : `<div style="text-align:center;padding:24px 12px;color:var(--muted);font-size:12px;"><i class="ti ti-${col.icon}" style="font-size:22px;opacity:0.3;display:block;margin-bottom:6px;"></i>Kosong</div>`;
+
+    return `
+      <div class="kanban-col">
+        <div class="kanban-header ${col.cls}">
+          <span>${col.label}</span>
+          <span class="kanban-count">${colOrders.length}</span>
+        </div>
+        <div class="kanban-body">${cards}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==============================
+// PICKUP
+// ==============================
+function setPickupFilter(f, btn) {
+  pickupFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPickup();
+}
+
+function renderPickup() {
+  const q = document.getElementById('search-pickup')?.value.toLowerCase() || '';
+  let filtered = orders.filter(o => {
+    const matchQ = !q || o.nama?.toLowerCase().includes(q);
+    const matchF = pickupFilter === 'all' ? ['selesai','diambil'].includes(o.status) : o.status === pickupFilter;
+    return matchQ && matchF;
+  });
+
+  const list = document.getElementById('pickup-list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><i class="ti ti-package"></i><p>${pickupFilter === 'selesai' ? 'Tidak ada order yang siap diambil' : 'Tidak ada data'}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(o => {
+    const tagsHtml = (o.items || []).map(it =>
+      `<span class="pickup-item-tag">${escH(it.qty)} ${escH(it.satuan)} ${escH(it.nama)}</span>`
+    ).join('');
+
+    const waBtn = o.wa ? `<a href="https://wa.me/62${o.wa.replace(/^0/,'')}?text=${encodeURIComponent('Halo '+o.nama+', pesanan Anda sudah selesai dan siap diambil!')}" target="_blank" class="btn btn-ghost btn-sm" style="color:#22c55e;border-color:#22c55e;"><i class="ti ti-brand-whatsapp"></i> WA</a>` : '';
+
+    const pickupBtn = o.status === 'selesai'
+      ? `<button class="btn btn-primary btn-sm" onclick="updateStatus('${o.id}','diambil')"><i class="ti ti-package-export"></i> Diambil</button>`
+      : `<span class="badge badge-diambil"><span class="badge-dot"></span>Sudah Diambil</span>`;
+
+    return `
+      <div class="pickup-card">
+        <div class="pickup-info">
+          <div class="pickup-name">${escH(o.nama)}</div>
+          <div class="pickup-meta"><i class="ti ti-calendar" style="font-size:12px;"></i> ${o.tgl || '-'} ${o.wa ? `• <i class="ti ti-phone" style="font-size:12px;"></i> ${escH(o.wa)}` : ''}</div>
+          <div class="pickup-items">${tagsHtml}</div>
+          ${o.catatan ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;"><i class="ti ti-notes" style="font-size:12px;"></i> ${escH(o.catatan)}</div>` : ''}
+        </div>
+        <div class="pickup-actions">
+          ${waBtn}
+          ${pickupBtn}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==============================
+// RIWAYAT
+// ==============================
+function renderRiwayat() {
+  const q = document.getElementById('search-riwayat')?.value.toLowerCase() || '';
+  const filtered = orders.filter(o => !q || o.nama?.toLowerCase().includes(q));
+
+  const tbody = document.getElementById('tbl-riwayat');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="ti ti-inbox"></i><p>Belum ada data</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(o => `
+    <tr>
+      <td class="td-name">${escH(o.nama)}</td>
+      <td style="color:var(--muted);font-size:12.5px;">${(o.items||[]).map(i=>`${i.qty} ${i.satuan} ${i.nama}`).join(', ')}</td>
+      <td style="color:var(--muted);font-size:12.5px;">${o.tgl || '-'}</td>
+      <td>${badgeHtml(o.status)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="showDetail('${o.id}')"><i class="ti ti-eye"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ==============================
+// HELPERS
+// ==============================
+function badgeHtml(status) {
+  const map = {
+    antri: ['badge-antri', 'Antri'],
+    proses: ['badge-proses', 'Proses'],
+    selesai: ['badge-selesai', 'Selesai'],
+    diambil: ['badge-diambil', 'Diambil'],
+  };
+  const [cls, label] = map[status] || ['badge-diambil', status];
+  return `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>`;
+}
+
+function escH(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, type = '') {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = type === 'success' ? 'ti-circle-check' : type === 'error' ? 'ti-alert-circle' : 'ti-info-circle';
+  el.innerHTML = `<i class="ti ${icon}"></i> ${msg}`;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; el.style.transition = '0.3s'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openNewOrder();
+  }
+});
+</script>
+</body>
+</html>
