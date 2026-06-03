@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PrintFlow — Manajemen Digital Printing</title>
+<title>Printcess Digital Printing — Manajemen Digital Printing</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -71,6 +71,14 @@ body {
   display: flex;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+#app-content {
+  display: none; /* dikontrol JS */
+  flex: 1;
+  flex-direction: row;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* ====== SIDEBAR ====== */
@@ -1179,6 +1187,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
   padding: 20px;
 }
 
+/* .hidden tidak dipakai lagi — visibility dikontrol JS via _showApp()/_showLogin() */
 #login-overlay.hidden {
   display: none;
 }
@@ -1387,6 +1396,9 @@ textarea.form-control { resize: vertical; min-height: 72px; }
   </div>
 </div>
 
+
+<!-- ===== APP CONTENT (hidden until authenticated) ===== -->
+<div id="app-content" style="display:none;width:100%;min-height:100vh;display:none;">
 
 <!-- ===== SIDEBAR ===== -->
 <nav id="sidebar">
@@ -1714,6 +1726,8 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 
 <!-- ===== TOAST ===== -->
 <div id="toast-container"></div>
+
+</div><!-- /#app-content -->
 
 <script>
 // ==============================
@@ -2553,9 +2567,29 @@ document.addEventListener('keydown', e => {
 });
 
 // ==============================
-// LOGIN SYSTEM (SECURE — key dari Firestore, bukan hardcode)
+// LOGIN SYSTEM — SECURE v2
+// Konten dashboard TIDAK ADA di DOM sampai auth berhasil diverifikasi.
+// Menghapus overlay via DevTools tidak akan memperlihatkan konten apapun.
 // ==============================
 const SESSION_KEY = 'pf_auth_session';
+
+function _showApp() {
+  // Tampilkan konten dashboard
+  const app = document.getElementById('app-content');
+  if (app) { app.style.display = 'flex'; }
+  // Sembunyikan overlay login
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) { overlay.style.display = 'none'; }
+}
+
+function _showLogin() {
+  // Pastikan konten dashboard tetap tersembunyi
+  const app = document.getElementById('app-content');
+  if (app) { app.style.display = 'none'; }
+  // Tampilkan overlay login
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) { overlay.style.display = 'flex'; }
+}
 
 function toggleKeyVisibility() {
   const input = document.getElementById('login-key-input');
@@ -2570,10 +2604,36 @@ function toggleKeyVisibility() {
   input.focus();
 }
 
-function checkLoginSession() {
+async function checkLoginSession() {
   const session = sessionStorage.getItem(SESSION_KEY);
   if (session === 'authenticated') {
-    document.getElementById('login-overlay').classList.add('hidden');
+    // Re-verifikasi ke Firebase setiap kali halaman dibuka
+    // Agar session yang di-inject manual tidak bisa bypass
+    try {
+      await waitForFirebase();
+      const { getDocs, query: fsQuery, where, collection: fsCol } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      // Simpan token hash di session, bukan hanya string 'authenticated'
+      const storedHash = sessionStorage.getItem(SESSION_KEY + '_hash');
+      if (!storedHash) { _showLogin(); return; }
+      const q = fsQuery(
+        fsCol(window._db, 'access_keys'),
+        where('hash', '==', storedHash),
+        where('active', '==', true)
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        _showApp();
+      } else {
+        sessionStorage.removeItem(SESSION_KEY);
+        sessionStorage.removeItem(SESSION_KEY + '_hash');
+        _showLogin();
+      }
+    } catch(e) {
+      // Jika Firebase gagal, jangan tampilkan app
+      _showLogin();
+    }
+  } else {
+    _showLogin();
   }
 }
 
@@ -2589,19 +2649,14 @@ async function doLogin() {
     return;
   }
 
-  // Tampilkan loading
   btnLogin.disabled = true;
-  btnLogin.textContent = 'Memverifikasi...';
+  btnLogin.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Memverifikasi...';
 
   try {
-    // Tunggu Firebase siap
     await waitForFirebase();
 
-    // Hash key dengan SHA-256 sebelum dikirim ke Firestore
     const hashedKey = await sha256(val);
 
-    // Cek ke koleksi 'access_keys' di Firestore
-    // Setiap dokumen: { hash: "<sha256-dari-key>", active: true }
     const { getDocs, query: fsQuery, where, collection: fsCol } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     const q = fsQuery(
       fsCol(window._db, 'access_keys'),
@@ -2611,9 +2666,11 @@ async function doLogin() {
     const snap = await getDocs(q);
 
     if (!snap.empty) {
+      // Simpan hash (bukan plain key) di session untuk re-verifikasi
       sessionStorage.setItem(SESSION_KEY, 'authenticated');
-      document.getElementById('login-overlay').classList.add('hidden');
+      sessionStorage.setItem(SESSION_KEY + '_hash', hashedKey);
       errEl.classList.remove('show');
+      _showApp();
     } else {
       throw new Error('Key tidak valid');
     }
@@ -2626,7 +2683,7 @@ async function doLogin() {
     setTimeout(() => input.classList.remove('error-shake'), 500);
   } finally {
     btnLogin.disabled = false;
-    btnLogin.textContent = 'Masuk';
+    btnLogin.innerHTML = '<i class="ti ti-login"></i> Masuk';
   }
 }
 
@@ -2648,7 +2705,7 @@ function waitForFirebase() {
   });
 }
 
-// Hash SHA-256 (built-in browser API, tidak butuh library)
+// Hash SHA-256
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -2656,7 +2713,13 @@ async function sha256(message) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Cek session saat halaman dimuat
+// Spin animation untuk loading button
+const _spinStyle = document.createElement('style');
+_spinStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(_spinStyle);
+
+// Sembunyikan app saat pertama load, lalu cek session
+_showLogin();
 checkLoginSession();
 
 </script>
