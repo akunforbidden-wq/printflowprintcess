@@ -1940,6 +1940,9 @@ function openEditOrder(id) {
   // Show order number
   document.getElementById('order-id-display-wrap').style.display = 'block';
   document.getElementById('f-order-no').value = order.orderNo || id.slice(0, 8).toUpperCase();
+  // Reset save button (penting: reset dari state disabled sebelumnya)
+  const saveBtn = document.querySelector('#modal-order .modal-footer .btn-primary');
+  if (saveBtn) { saveBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Simpan Perubahan'; saveBtn.disabled = false; }
   // Clear and fill items
   const container = document.getElementById('items-container');
   const rows = container.querySelectorAll('.item-row');
@@ -1961,24 +1964,37 @@ async function saveOrder() {
   const items = getItems();
   if (items.length === 0) { toast('Tambahkan minimal satu item!', 'error'); return; }
 
+  // Pastikan Firebase sudah siap
+  if (!window._db || !window._updateDoc || !window._addDoc) {
+    toast('Firebase belum siap. Tunggu sebentar lalu coba lagi.', 'error');
+    return;
+  }
+
+  const saveBtn = document.querySelector('#modal-order .modal-footer .btn-primary');
+
+  // Disable tombol untuk mencegah double-submit
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Menyimpan...'; }
+
   const data = {
     nama,
     wa: document.getElementById('f-wa').value.trim(),
     tgl: document.getElementById('f-tgl').value,
     catatan: document.getElementById('f-catatan').value.trim(),
     items,
-    status: currentEditId ? orders.find(o => o.id === currentEditId)?.status || 'antri' : 'antri',
+    status: currentEditId ? (orders.find(o => o.id === currentEditId)?.status || 'antri') : 'antri',
   };
 
   try {
     if (currentEditId) {
+      // ===== MODE EDIT =====
       await window._updateDoc(window._doc(window._db, 'orders', currentEditId), {
         ...data, updatedAt: window._serverTimestamp()
       });
-      toast('Order berhasil diperbarui!', 'success');
+      toast('Order berhasil diperbarui! ✓', 'success');
+      currentEditId = null;
       closeModal('modal-order');
     } else {
-      // Generate human-readable order number: PF-YYMMDD-XXXX
+      // ===== MODE TAMBAH BARU =====
       const now = new Date();
       const yy = String(now.getFullYear()).slice(-2);
       const mm = String(now.getMonth()+1).padStart(2,'0');
@@ -1991,18 +2007,23 @@ async function saveOrder() {
       const docRef = await window._addDoc(window._col(window._db, 'orders'), data);
       toast(`Order disimpan! No. Order: ${orderNo}`, 'success');
 
-      // Show order ID after saving
+      // Tampilkan No. Order & ubah tombol jadi "Tersimpan"
       document.getElementById('modal-order-title').textContent = 'Order Tersimpan ✓';
       document.getElementById('order-id-display-wrap').style.display = 'block';
       document.getElementById('f-order-no').value = orderNo;
       currentEditId = docRef.id; // prevent re-save
-      // Change save button text
-      const saveBtn = document.querySelector('#modal-order .modal-footer .btn-primary');
       if (saveBtn) { saveBtn.innerHTML = '<i class="ti ti-circle-check"></i> Tersimpan'; saveBtn.disabled = true; }
     }
   } catch(e) {
-    console.error(e);
-    toast('Gagal menyimpan. Cek koneksi & konfigurasi Firebase.', 'error');
+    console.error('saveOrder error:', e);
+    toast('Gagal menyimpan: ' + (e.message || 'Cek koneksi & Firebase.'), 'error');
+    // Re-enable tombol agar user bisa coba lagi
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = currentEditId
+        ? '<i class="ti ti-device-floppy"></i> Simpan Perubahan'
+        : '<i class="ti ti-device-floppy"></i> Simpan Order';
+    }
   }
 }
 
@@ -2362,7 +2383,7 @@ function shareQRWA() {
   if (!currentQROrder || !currentQROrderId) return;
   const url = getStatusURL(currentQROrderId);
   const storeName = document.getElementById('store-name')?.value || 'Digital Printing';
-  const msg = `Halo ${currentQROrder.nama}! 👋\n\nPesanan Anda di *${storeName}* sudah terdaftar.\n\nGunakan link ini untuk memantau status pesanan Anda secara real-time:\n${url}\n\nAtau tunjukkan QR Code ini saat pengambilan.`;
+  const msg = `Halo ${currentQROrder.nama}! 👋\n\nPesanan Anda di *${storeName}* sudah terdaftar.\n\nGunakan link ini untuk memantau status pesanan Anda secara real-time:\n${url}\n\nTerima kasih.`;
   const wa = currentQROrder.wa ? `62${currentQROrder.wa.replace(/^0/, '')}` : '';
   window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
 }
