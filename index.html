@@ -370,6 +370,41 @@ body {
 .page { display: none; padding: 28px; }
 .page.active { display: block; }
 
+/* ====== TOOL PAGES (embedded apps) ====== */
+.page.tool-page.active { padding: 0; }
+.tool-page-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+.tool-page-bar-info { display: flex; align-items: center; gap: 10px; }
+.tool-page-bar-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.tool-page-bar-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+.tool-page-bar-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.tool-page-frame-wrap { width: 100%; height: calc(100vh - 62px - 63px); background: var(--paper2); }
+.tool-page-frame { width: 100%; height: 100%; border: none; display: block; background: #fff; }
+
+/* ====== SIDEBAR SECTION LABEL ====== */
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.22);
+  padding: 16px 13px 6px;
+}
+
 /* ====== STATS ====== */
 .stats-grid {
   display: grid;
@@ -1824,6 +1859,18 @@ textarea.form-control { resize: vertical; min-height: 72px; }
     <div class="nav-item" data-page="scan-qr">
       <i class="ti ti-qrcode"></i> Scan QR Pickup
     </div>
+
+    <div class="nav-section-label">Alat Bantu</div>
+    <div class="nav-item" data-page="kalkulator">
+      <i class="ti ti-calculator"></i> Kalkulator Harga
+    </div>
+    <div class="nav-item" data-page="list-banner">
+      <i class="ti ti-list-details"></i> List Banner
+    </div>
+    <div class="nav-item" data-page="label-banner">
+      <i class="ti ti-tag"></i> Label Cetak Banner
+    </div>
+
     <div class="nav-item" data-page="settings">
       <i class="ti ti-settings"></i> Pengaturan
     </div>
@@ -2022,6 +2069,63 @@ textarea.form-control { resize: vertical; min-height: 72px; }
       </div>
     </div>
   </div>
+
+  <!-- ===== TOOL PAGE: KALKULATOR HARGA ===== -->
+  <div class="page tool-page" id="page-kalkulator">
+    <div class="tool-page-bar">
+      <div class="tool-page-bar-info">
+        <div class="tool-page-bar-icon" style="background:linear-gradient(135deg,#c9542f,#a8401f);"><i class="ti ti-calculator"></i></div>
+        <div>
+          <div class="tool-page-bar-title">Kalkulator Harga Digital Printing</div>
+          <div class="tool-page-bar-sub">Hitung estimasi harga cetak spanduk, sticker &amp; kertas</div>
+        </div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="kalkulator-digital-printing.html" target="_blank" rel="noopener">
+        <i class="ti ti-external-link"></i> <span class="hide-mobile">Buka di Tab Baru</span>
+      </a>
+    </div>
+    <div class="tool-page-frame-wrap">
+      <iframe class="tool-page-frame" id="frame-kalkulator" data-src="kalkulator-digital-printing.html" title="Kalkulator Harga Digital Printing"></iframe>
+    </div>
+  </div>
+
+  <!-- ===== TOOL PAGE: LIST BANNER ===== -->
+  <div class="page tool-page" id="page-list-banner">
+    <div class="tool-page-bar">
+      <div class="tool-page-bar-info">
+        <div class="tool-page-bar-icon" style="background:linear-gradient(135deg,#7C5CFC,#5A3DDC);"><i class="ti ti-list-details"></i></div>
+        <div>
+          <div class="tool-page-bar-title">List Banner</div>
+          <div class="tool-page-bar-sub">Kelola daftar banner, import/export Excel &amp; cetak rekap</div>
+        </div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="list-banner-excel.html" target="_blank" rel="noopener">
+        <i class="ti ti-external-link"></i> <span class="hide-mobile">Buka di Tab Baru</span>
+      </a>
+    </div>
+    <div class="tool-page-frame-wrap">
+      <iframe class="tool-page-frame" id="frame-list-banner" data-src="list-banner-excel.html" title="List Banner"></iframe>
+    </div>
+  </div>
+
+  <!-- ===== TOOL PAGE: LABEL CETAK BANNER ===== -->
+  <div class="page tool-page" id="page-label-banner">
+    <div class="tool-page-bar">
+      <div class="tool-page-bar-info">
+        <div class="tool-page-bar-icon" style="background:linear-gradient(135deg,#c0392b,#922b21);"><i class="ti ti-tag"></i></div>
+        <div>
+          <div class="tool-page-bar-title">Label Cetak Banner</div>
+          <div class="tool-page-bar-sub">Upload Excel pekerjaan, langsung cetak label per banner</div>
+        </div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="label-banner-print.html" target="_blank" rel="noopener">
+        <i class="ti ti-external-link"></i> <span class="hide-mobile">Buka di Tab Baru</span>
+      </a>
+    </div>
+    <div class="tool-page-frame-wrap">
+      <iframe class="tool-page-frame" id="frame-label-banner" data-src="label-banner-print.html" title="Label Cetak Banner"></iframe>
+    </div>
+  </div>
 </div>
 
 <!-- ===== MODAL ORDER ===== -->
@@ -2217,8 +2321,15 @@ const pageNames = {
   pengambilan: 'Pengambilan Barang',
   riwayat: 'Riwayat Order',
   'scan-qr': 'Scan QR Pickup',
+  kalkulator: 'Kalkulator Harga',
+  'list-banner': 'List Banner',
+  'label-banner': 'Label Cetak Banner',
   settings: 'Pengaturan'
 };
+
+// Halaman "tool" yang berupa aplikasi terpisah (embed via iframe).
+// Topbar aksi (Import/Export/Order Baru) disembunyikan saat membuka halaman ini.
+const toolPages = ['kalkulator', 'list-banner', 'label-banner'];
 
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
@@ -2228,6 +2339,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
     document.getElementById('topbar-title').textContent = pageNames[page];
+    const topbarActions = document.querySelector('.topbar-actions');
+    if (topbarActions) topbarActions.style.display = toolPages.includes(page) ? 'none' : '';
     if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
     renderCurrentPage(page);
   });
@@ -2239,6 +2352,17 @@ function renderCurrentPage(page) {
   else if (page === 'pengambilan') renderPickup();
   else if (page === 'riwayat') renderRiwayat();
   else if (page === 'scan-qr') initScanPage();
+  else if (toolPages.includes(page)) loadToolFrame(page);
+}
+
+// Lazy-load iframe alat bantu (Kalkulator / List Banner / Label Banner) —
+// hanya dimuat saat pertama kali halaman dibuka, supaya tidak membebani saat startup.
+function loadToolFrame(page) {
+  const frame = document.getElementById('frame-' + page);
+  if (frame && !frame.dataset.loaded) {
+    frame.src = frame.dataset.src;
+    frame.dataset.loaded = '1';
+  }
 }
 
 function toggleSidebar() {
