@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banner Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- SheetJS untuk baca Excel — bisa diganti versi offline jika perlu -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:         #09090F;
+  --s1:         #111118;
+  --s2:         #16161F;
+  --s3:         #1C1C28;
+  --s4:         #222232;
+  --b1:         rgba(255,255,255,.055);
+  --b2:         rgba(255,255,255,.09);
+  --b3:         rgba(255,255,255,.14);
+  --t1:         #F0F0FF;
+  --t2:         #9090B0;
+  --t3:         #555570;
+  --t4:         #333348;
+  --violet:     #7C5CFC;
+  --violet-d:   #5A3DDC;
+  --violet-dim: rgba(124,92,252,.14);
+  --violet-gl:  rgba(124,92,252,.06);
+  --amber:      #F59E0B;
+  --amber-dim:  rgba(245,158,11,.12);
+  --green:      #10D9A0;
+  --green-dim:  rgba(16,217,160,.1);
+  --red:        #FF5757;
+  --red-dim:    rgba(255,87,87,.1);
+  --r1:10px;--r2:14px;--r3:18px;
+}
+
+html,body{
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--t1);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══════════════════════════════════════════
+   MESH BACKGROUND
+══════════════════════════════════════════ */
+.mesh{
+  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+}
+.mesh::before{
+  content:'';position:absolute;
+  width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,92,252,.18) 0%,transparent 70%);
+  top:-200px;left:-100px;
+  animation:pulse 8s ease-in-out infinite alternate;
+}
+.mesh::after{
+  content:'';position:absolute;
+  width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 70%);
+  bottom:-100px;right:-50px;
+  animation:pulse 10s ease-in-out infinite alternate-reverse;
+}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.15)}}
+
+.grid-lines{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(var(--b1) 1px,transparent 1px),
+    linear-gradient(90deg,var(--b1) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 20%,transparent 100%);
+}
+
+/* ══════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════ */
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 24px 80px}
+
+/* ══════════════════════════════════════════
+   MASTHEAD
+══════════════════════════════════════════ */
+.masthead{
+  padding:32px 0 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--b1);
+  margin-bottom:32px;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,#7C5CFC 0%,#5A3DDC 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:#fff;
+  box-shadow:0 0 0 1px rgba(124,92,252,.4),0 8px 24px rgba(124,92,252,.3);
+  position:relative;overflow:hidden;
+}
+.brand-icon::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;
+  background:rgba(255,255,255,.1);border-radius:12px 12px 0 0;
+}
+.brand-info{}
+.brand-name{
+  font-size:20px;font-weight:800;color:var(--t1);
+  letter-spacing:-.03em;line-height:1.1;
+}
+.brand-sub{font-size:13px;color:var(--t3);margin-top:3px;letter-spacing:.02em;text-transform:uppercase}
+.hbtns{display:flex;gap:8px}
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;font-size:15px;font-weight:600;
+  border-radius:var(--r1);cursor:pointer;border:none;outline:none;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  transition:all .15s;letter-spacing:-.01em;
+}
+.btn:active{transform:scale(.97)}
+
+.btn-primary{
+  background:linear-gradient(135deg,#7C5CFC,#5A3DDC);
+  color:#fff;
+  box-shadow:0 0 0 1px rgba(124,92,252,.5),0 4px 16px rgba(124,92,252,.3);
+}
+.btn-primary:hover{
+  box-shadow:0 0 0 1px rgba(124,92,252,.7),0 6px 24px rgba(124,92,252,.45);
+  transform:translateY(-1px);
+}
+
+.btn-ghost{
+  background:var(--s2);color:var(--t2);
+  border:1px solid var(--b2);
+}
+.btn-ghost:hover{background:var(--s3);color:var(--t1);border-color:var(--b3)}
+
+.btn-green{
+  background:var(--green-dim);color:var(--green);
+  border:1px solid rgba(16,217,160,.2);
+}
+.btn-green:hover{background:rgba(16,217,160,.18)}
+
+.btn-red{
+  background:var(--red-dim);color:var(--red);
+  border:1px solid rgba(255,87,87,.2);
+}
+.btn-red:hover{background:rgba(255,87,87,.18)}
+
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn-xs{padding:5px 10px;font-size:11px}
+
+/* ── import excel ── */
+.btn-excel{
+  background:rgba(16,185,129,.12);color:#10b981;
+  border:1px solid rgba(16,185,129,.25);
+}
+.btn-excel:hover{background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.45)}
+
+/* drop zone overlay */
+#dropzone{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(5,5,12,.88);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;flex-direction:column;gap:16px;
+}
+#dropzone.on{display:flex}
+.dz-box{
+  border:2px dashed rgba(16,185,129,.5);border-radius:20px;
+  padding:48px 64px;text-align:center;
+  background:rgba(16,185,129,.06);
+  transition:border-color .2s,background .2s;
+}
+.dz-box.hover{border-color:#10b981;background:rgba(16,185,129,.12)}
+.dz-icon{
+  width:64px;height:64px;border-radius:16px;
+  background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+}
+.dz-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.dz-sub{font-size:14px;color:var(--t3);margin-bottom:20px;line-height:1.5}
+.dz-fmt{
+  display:inline-block;padding:4px 12px;border-radius:6px;
+  background:var(--s3);border:1px solid var(--b2);
+  font-size:11px;font-weight:600;color:var(--t3);
+  font-family:'JetBrains Mono',monospace;letter-spacing:.05em;
+}
+#xlFile{display:none}
+
+/* panduan format */
+.fmt-info{
+  background:var(--s2);border:1px solid var(--b2);border-radius:12px;
+  padding:16px 20px;max-width:420px;
+}
+.fmt-info-title{font-size:12px;font-weight:700;color:var(--t2);margin-bottom:10px;letter-spacing:.05em;text-transform:uppercase}
+.fmt-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.fmt-col{
+  background:var(--s3);border:1px solid var(--b2);border-radius:8px;
+  padding:8px 10px;text-align:center;
+}
+.fmt-col-lbl{font-size:10px;color:var(--t3);margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.fmt-col-val{font-size:13px;font-weight:700;color:var(--t1);font-family:'JetBrains Mono',monospace}
+.fmt-note{font-size:11px;color:var(--t3);margin-top:10px;line-height:1.5}
+.fmt-note b{color:var(--t2)}
+
+/* ══════════════════════════════════════════
+   STAT COUNTERS
+══════════════════════════════════════════ */
+.counters{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.counter{
+  background:var(--s1);
+  border:1px solid var(--b1);
+  border-radius:var(--r3);
+  padding:20px 22px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+  cursor:default;
+}
+.counter:hover{border-color:var(--b2);transform:translateY(-2px)}
+.counter-glow{
+  position:absolute;top:-30px;right:-20px;
+  width:120px;height:120px;border-radius:50%;opacity:.5;
+  pointer-events:none;
+}
+.counter:nth-child(1) .counter-glow{background:radial-gradient(circle,rgba(144,144,176,.2),transparent 70%)}
+.counter:nth-child(2) .counter-glow{background:radial-gradient(circle,rgba(124,92,252,.3),transparent 70%)}
+.counter:nth-child(3) .counter-glow{background:radial-gradient(circle,rgba(16,217,160,.25),transparent 70%)}
+.counter-eyebrow{
+  font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--t3);margin-bottom:10px;
+}
+.counter-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:40px;font-weight:600;letter-spacing:-.04em;line-height:1;
+  color:var(--t1);margin-bottom:4px;
+}
+.counter:nth-child(2) .counter-val{color:var(--violet)}
+.counter:nth-child(3) .counter-val{color:var(--green)}
+.counter-hint{font-size:13px;color:var(--t3)}
+
+/* ══════════════════════════════════════════
+   TOOLBAR
+══════════════════════════════════════════ */
+.toolbar{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;
+}
+.search-box{
+  flex:1;position:relative;
+}
+.search-box i,.search-box .search-icon-svg{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  color:var(--t3);font-size:18px;pointer-events:none;
+  transition:color .15s;
+}
+.search-box input{
+  width:100%;padding:11px 16px 11px 42px;font-size:15px;
+  border:1px solid var(--b2);border-radius:var(--r1);
+  background:var(--s1);color:var(--t1);outline:none;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.search-box input::placeholder{color:var(--t3)}
+.search-box input:focus{
+  background:var(--s2);
+  border-color:var(--violet);
+  box-shadow:0 0 0 3px rgba(124,92,252,.12);
+}
+.search-box input:focus~i,.search-box:focus-within i{color:var(--violet)}
+
+/* ══════════════════════════════════════════
+   TABLE CARD
+══════════════════════════════════════════ */
+.tbl-card{
+  background:var(--s1);
+  border:1px solid var(--b1);
+  border-radius:var(--r3);
+  overflow:hidden;
+}
+table{width:100%;border-collapse:collapse;font-size:15px;table-layout:fixed}
+
+thead tr{
+  background:linear-gradient(180deg,var(--s3) 0%,var(--s2) 100%);
+  border-bottom:1px solid var(--b2);
+}
+th{
+  padding:13px 16px;text-align:left;
+  font-size:12px;font-weight:700;color:var(--t3);
+  letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;user-select:none;white-space:nowrap;
+  transition:color .12s;
+}
+th:hover{color:var(--t2)}
+th .arr{margin-left:4px;opacity:.3;font-style:normal;font-size:11px}
+th.active{color:var(--violet)}
+th.active .arr{opacity:1}
+
+td{
+  padding:15px 16px;
+  border-bottom:1px solid var(--b1);
+  color:var(--t1);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  vertical-align:middle;
+  transition:background .1s;
+}
+td.td-num{
+  color:var(--t4);
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+}
+td.td-c{text-align:center}
+td.td-qty{
+  font-family:'JetBrains Mono',monospace;
+  font-size:18px;font-weight:600;
+  color:var(--amber);text-align:center;
+}
+td.td-nama{font-weight:600;font-size:15px}
+
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .08s}
+tbody tr:hover td{background:var(--violet-gl)}
+
+tbody tr.slide-in{animation:slidein .3s cubic-bezier(.22,1,.36,1) both}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+
+.col-no{width:52px}
+.col-nama{width:auto}
+.col-ukuran{width:150px}
+.col-qty{width:72px}
+.col-aksi{width:88px;text-align:center}
+
+/* size pill */
+.upill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px 5px 10px;border-radius:8px;font-size:13px;font-weight:600;
+  background:var(--s3);color:var(--t2);
+  border:1px solid var(--b2);
+  font-family:'JetBrains Mono',monospace;letter-spacing:-.01em;
+}
+.upill i{font-size:14px;color:var(--t3)}
+
+/* action buttons */
+.act{display:flex;gap:6px;justify-content:center}
+.ib{
+  width:36px;height:36px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:8px;cursor:pointer;border:1px solid var(--b2);
+  background:transparent;color:var(--t2);font-size:18px;
+  transition:all .12s;font-family:inherit;
+}
+.ib:hover{background:var(--s3);color:var(--t1);border-color:var(--b3)}
+.ib.edit:hover{background:var(--violet-dim);color:var(--violet);border-color:rgba(124,92,252,.3)}
+.ib.del:hover{background:var(--red-dim);color:var(--red);border-color:rgba(255,87,87,.25)}
+
+/* empty state */
+.empty{
+  padding:5rem 1rem;text-align:center;color:var(--t3);
+}
+.empty-icon{
+  width:64px;height:64px;border-radius:16px;
+  background:var(--s2);border:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;color:var(--t4);
+  margin:0 auto 16px;
+}
+.empty-title{font-size:15px;font-weight:600;color:var(--t2);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--t3)}
+
+/* footer bar */
+.tbl-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 18px;font-size:14px;color:var(--t3);
+  border-top:1px solid var(--b1);
+  background:var(--s2);
+}
+.tbl-foot span b{color:var(--t2);font-weight:600}
+
+/* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,5,12,.8);backdrop-filter:blur(8px);
+  align-items:flex-start;justify-content:center;z-index:200;
+  padding:40px 16px 40px;overflow-y:auto;
+}
+.overlay.on{display:flex}
+
+.modal{
+  background:var(--s1);
+  border:1px solid var(--b2);
+  border-radius:var(--r3);
+  padding:28px;
+  width:600px;max-width:100%;
+  margin:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,.7),0 0 0 1px rgba(124,92,252,.08);
+  animation:modalin .2s cubic-bezier(.34,1.36,.64,1) both;
+}
+@keyframes modalin{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+
+.mhead{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--b1);
+}
+.mhead-left{display:flex;align-items:center;gap:12px}
+.mhead-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--violet-dim);border:1px solid rgba(124,92,252,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;color:var(--violet);
+}
+.mtitle{font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.02em}
+.msub{font-size:13px;color:var(--t3);margin-top:2px}
+
+/* column labels row */
+.col-labels{
+  display:grid;
+  grid-template-columns:1fr 160px 80px 32px;
+  gap:8px;margin-bottom:8px;padding:0 2px;
+}
+.col-lbl{font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
+.col-lbl.center{text-align:center}
+.col-labels.single{grid-template-columns:1fr 160px 80px}
+
+/* item rows */
+.ilist{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:360px;overflow-y:auto;padding-right:2px}
+.ilist::-webkit-scrollbar{width:4px}
+.ilist::-webkit-scrollbar-track{background:transparent}
+.ilist::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+
+.irow{
+  display:grid;
+  grid-template-columns:1fr 160px 80px 32px;
+  gap:8px;align-items:center;
+  background:var(--s2);
+  border:1px solid var(--b1);
+  border-radius:12px;
+  padding:10px 10px;
+  transition:border-color .15s;
+}
+.irow:focus-within{border-color:rgba(124,92,252,.3);background:var(--s3)}
+.irow.single-row{
+  grid-template-columns:1fr 160px 80px;
+  background:transparent;border:none;padding:0;
+}
+.irow.single-row:focus-within{background:transparent;border:none}
+
+/* fields inside row */
+.ff{position:relative}
+.ff input,.ff select{
+  width:100%;padding:10px 13px;font-size:15px;
+  border:1px solid var(--b2);border-radius:9px;
+  background:var(--s1);color:var(--t1);outline:none;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.ff input::placeholder{color:var(--t4)}
+.ff input:focus,.ff select:focus{
+  border-color:var(--violet);
+  box-shadow:0 0 0 3px rgba(124,92,252,.12);
+  background:var(--s2);
+}
+.ff input.error{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+.ff-qty input{
+  text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:17px;font-weight:600;color:var(--amber);
+}
+
+/* ukuran input */
+
+/* remove row button */
+.rm-btn{
+  width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;cursor:pointer;
+  border:1px solid var(--b1);background:transparent;
+  color:var(--t4);font-size:14px;
+  transition:all .12s;font-family:inherit;
+}
+.rm-btn:hover{background:var(--red-dim);color:var(--red);border-color:rgba(255,87,87,.2)}
+
+/* add row */
+.add-row{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 16px;font-size:12px;font-weight:600;
+  color:var(--violet);
+  background:transparent;
+  border:1px dashed rgba(124,92,252,.3);border-radius:10px;
+  cursor:pointer;width:100%;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  transition:all .15s;letter-spacing:-.01em;
+}
+.add-row:hover{background:var(--violet-gl);border-color:rgba(124,92,252,.5)}
+
+/* modal footer */
+.mfoot{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:20px;padding-top:18px;border-top:1px solid var(--b1);
+}
+
+/* ══════════════════════════════════════════
+   DELETE DIALOG
+══════════════════════════════════════════ */
+.dov{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,5,12,.85);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;z-index:300;padding:1rem;
+}
+.dov.on{display:flex}
+.dbox{
+  background:var(--s1);border:1px solid rgba(255,87,87,.2);
+  border-radius:var(--r3);padding:28px;width:340px;max-width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 0 1px rgba(255,87,87,.05);
+  animation:modalin .18s cubic-bezier(.34,1.36,.64,1) both;
+  text-align:center;
+}
+.dbox-icon{
+  width:56px;height:56px;border-radius:16px;
+  background:var(--red-dim);border:1px solid rgba(255,87,87,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;color:var(--red);margin:0 auto 16px;
+}
+.dbox-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:8px;letter-spacing:-.02em}
+.dbox-sub{font-size:15px;color:var(--t2);margin-bottom:22px;line-height:1.5}
+.dbox-name{
+  display:inline-block;padding:6px 14px;border-radius:8px;
+  background:var(--s2);border:1px solid var(--b2);
+  font-size:14px;font-weight:600;color:var(--t1);
+  margin-bottom:20px;
+}
+.dbtns{display:flex;gap:8px;justify-content:center}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+.toast-wrap{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  z-index:999;display:flex;flex-direction:column;align-items:center;gap:8px;
+  pointer-events:none;
+}
+.toast{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 18px;border-radius:10px;font-size:15px;font-weight:500;
+  color:var(--t1);
+  background:var(--s3);border:1px solid var(--b2);
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+  animation:toastin .25s cubic-bezier(.34,1.36,.64,1) both;
+  pointer-events:none;
+}
+.toast.out{animation:toastout .2s ease forwards}
+.toast i{font-size:15px}
+.toast.ok i{color:var(--green)}
+.toast.info i{color:var(--violet)}
+@keyframes toastin{from{opacity:0;transform:translateY(12px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes toastout{to{opacity:0;transform:translateY(8px) scale(.96)}}
+
+/* ══════════════════════════════════════════
+   PRINT
+══════════════════════════════════════════ */
+.print-head{display:none}
+@media print{
+  @page{margin:12mm 10mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mesh,.grid-lines,.no-print{display:none!important}
+
+  body{background:#fff!important;color:#111!important;font-size:11px!important;font-family:'Plus Jakarta Sans',Arial,sans-serif}
+  .wrap{padding:0!important;max-width:100%!important}
+
+  .print-head{
+    display:flex!important;
+    align-items:center;justify-content:space-between;
+    padding-bottom:6px;border-bottom:2px solid #333;
+    margin-bottom:8px;
+  }
+  .print-head h2{font-size:13px;font-weight:700;color:#111;margin:0;letter-spacing:-.01em}
+  .print-head p{font-size:9px;color:#555;margin:0;text-align:right;line-height:1.6}
+
+  .tbl-card{border:1px solid #bbb;border-radius:0!important;background:#fff!important;box-shadow:none!important}
+  table{font-size:10.5px!important;border-collapse:collapse;width:100%}
+
+  thead tr{background:#efefef!important}
+  th{padding:5px 8px!important;font-size:9px!important;font-weight:700;color:#333!important;border:1px solid #ccc;text-transform:uppercase;letter-spacing:.06em}
+  td{padding:5px 8px!important;color:#111!important;border:1px solid #ddd;font-size:10.5px!important}
+  tbody tr:nth-child(even) td{background:#f9f9f9!important}
+  tbody tr:hover td{background:transparent!important}
+
+  td.td-num{color:#888!important;font-size:9px!important;text-align:center}
+  td.td-nama{font-weight:600!important;font-size:10.5px!important}
+  td.td-qty{font-weight:700!important;font-size:12px!important;color:#111!important;text-align:center}
+
+  .upill{background:transparent!important;color:#333!important;border:none!important;padding:0!important;font-size:10.5px!important;font-family:monospace;display:inline!important}
+  .upill svg{display:none!important}
+
+  .col-aksi,th:last-child,td:last-child{display:none!important}
+  .tbl-foot{background:#efefef!important;padding:4px 8px!important;font-size:9.5px!important;color:#444!important;border-top:1px solid #ccc!important;display:flex;justify-content:space-between}
+  .tbl-foot b{color:#111!important}
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media(max-width:640px){
+  .wrap{padding:0 16px 60px}
+  .counters{grid-template-columns:1fr 1fr}
+  .counters .counter:last-child{grid-column:span 2}
+  .counter-val{font-size:28px}
+  .brand-sub{display:none}
+  .irow{grid-template-columns:1fr 32px;gap:6px}
+  .irow .ff-uk,.irow .ff-qty{display:none}
+  .irow.expanded .ff-uk,.irow.expanded .ff-qty{display:block}
+  .modal{padding:18px}
+  .col-labels{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  .mesh{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="mesh"></div>
+<div class="grid-lines"></div>
+
+<div class="print-head" id="ph">
+  <h2>Daftar Banner</h2>
+  <p id="ptd"></p>
+</div>
+
+<div class="wrap">
+
+  <!-- masthead -->
+  <div class="masthead no-print">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </div>
+      <div class="brand-info">
+        <div class="brand-name">Banner Studio</div>
+        <div class="brand-sub">Manajemen &amp; cetak banner</div>
+      </div>
+    </div>
+    <div class="hbtns">
+      <button class="btn btn-excel" onclick="openDropzone()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Import Excel
+      </button>
+      <button class="btn btn-ghost" onclick="doCetak()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Cetak
+      </button>
+      <button class="btn btn-primary" onclick="openAdd()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Tambah Banner
+      </button>
+    </div>
+  </div>
+
+  <!-- counters -->
+  <div class="counters no-print" id="counters"></div>
+
+  <!-- toolbar -->
+  <div class="toolbar no-print">
+    <div class="search-box">
+      <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none;transition:color .15s;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="q" placeholder="Cari nama banner…" oninput="render()" autocomplete="off">
+    </div>
+  </div>
+
+  <!-- table -->
+  <div class="tbl-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-no">#</th>
+          <th class="col-nama" onclick="srt('nama')">Nama Banner <i class="arr" id="arr-nama"></i></th>
+          <th class="col-ukuran" onclick="srt('ukuran')">Ukuran <i class="arr" id="arr-ukuran"></i></th>
+          <th class="col-qty td-c" onclick="srt('qty')">Qty <i class="arr" id="arr-qty"></i></th>
+          <th class="col-aksi no-print">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tb"></tbody>
+    </table>
+    <div class="tbl-foot">
+      <span id="fi">—</span>
+      <span id="ftot"></span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD/EDIT modal -->
+<div class="overlay" id="ov">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mhead-left">
+        <div class="mhead-icon" id="micon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div>
+          <div class="mtitle" id="mtitle">Tambah Banner</div>
+          <div class="msub" id="msub">Isi detail banner yang ingin ditambahkan</div>
+        </div>
+      </div>
+      <button class="ib" onclick="closeOv()" aria-label="Tutup">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- column labels -->
+    <div class="col-labels" id="clabels">
+      <div class="col-lbl">Nama Banner</div>
+      <div class="col-lbl">Ukuran</div>
+      <div class="col-lbl center">Qty</div>
+      <div></div>
+    </div>
+    <!-- rows -->
+    <div class="ilist" id="ilist"></div>
+    <button class="add-row" id="addRowBtn" onclick="addRow()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Tambah satu lagi
+    </button>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeOv()">Batal</button>
+      <button class="btn btn-primary" onclick="save()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE dialog -->
+<div class="dov" id="dov">
+  <div class="dbox">
+    <div class="dbox-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </div>
+    <div class="dbox-title">Hapus banner ini?</div>
+    <div class="dbox-sub">Tindakan ini tidak bisa dibatalkan.</div>
+    <div class="dbox-name" id="dname">—</div>
+    <div class="dbtns">
+      <button class="btn btn-ghost btn-sm" onclick="closeDel()">Batal</button>
+      <button class="btn btn-red btn-sm" onclick="confirmDel()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="tw"></div>
+
+<!-- Import Excel Dropzone -->
+<div id="dropzone">
+  <div class="dz-box" id="dzBox">
+    <div class="dz-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    </div>
+    <div class="dz-title">Upload File Excel</div>
+    <div class="dz-sub">Seret &amp; lepas file di sini, atau klik tombol di bawah</div>
+    <button class="btn btn-excel" onclick="document.getElementById('xlFile').click()" style="margin:0 auto 14px;display:flex">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Pilih File .xlsx / .xls
+    </button>
+    <input type="file" id="xlFile" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+    <span class="dz-fmt">.xlsx &nbsp;·&nbsp; .xls &nbsp;·&nbsp; .csv</span>
+  </div>
+
+  <div class="fmt-info">
+    <div class="fmt-info-title">📋 Format Kolom Excel</div>
+    <div class="fmt-cols">
+      <div class="fmt-col">
+        <div class="fmt-col-lbl">Kolom A</div>
+        <div class="fmt-col-val">Nama</div>
+      </div>
+      <div class="fmt-col">
+        <div class="fmt-col-lbl">Kolom B</div>
+        <div class="fmt-col-val">Ukuran</div>
+      </div>
+      <div class="fmt-col">
+        <div class="fmt-col-lbl">Kolom C</div>
+        <div class="fmt-col-val">Qty</div>
+      </div>
+    </div>
+    <div class="fmt-note">
+      Baris pertama bisa berupa <b>judul kolom</b> (otomatis dilewati) atau langsung data.<br>
+      Contoh: <b>Banner Promosi</b> | <b>100×250 cm</b> | <b>5</b>
+    </div>
+  </div>
+
+  <button class="btn btn-ghost" onclick="closeDropzone()" style="margin-top:4px">Batal</button>
+</div>
+
+<script>
+const PRESETS=['60×160 cm','80×200 cm','100×250 cm','120×300 cm','150×300 cm','200×400 cm'];
+
+let data=[];
+let nid=1,sk='nama',sa=true,eid=null,delId=null,rowKey=0;
+
+/* ── utils ── */
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const isCustom=u=>!PRESETS.includes(u);
+
+/* ── toast ── */
+function toast(msg,type='ok',dur=2400){
+  const tw=document.getElementById('tw');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  const iconSvg=type==='ok'
+    ?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    :'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  t.innerHTML=`${iconSvg}${msg}`;
+  tw.appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),250)},dur);
+}
+
+/* ── render table ── */
+function getFil(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  return data.filter(r=>!q||r.nama.toLowerCase().includes(q))
+    .sort((a,b)=>{
+      let av=a[sk],bv=b[sk];
+      if(typeof av==='string'){av=av.toLowerCase();bv=bv.toLowerCase();}
+      return sa?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);
+    });
+}
+
+function render(){
+  const rows=getFil();
+  const tb=document.getElementById('tb');
+  if(!rows.length){
+    tb.innerHTML=`<tr><td colspan="5">
+      <div class="empty">
+        <div class="empty-icon"><i class="ti ti-photo-off"></i></div>
+        <div class="empty-title">Tidak ada banner ditemukan</div>
+        <div class="empty-sub">Coba ubah kata pencarian atau tambah banner baru</div>
+      </div>
+    </td></tr>`;
+  } else {
+    tb.innerHTML=rows.map((r,i)=>`
+      <tr class="slide-in" style="animation-delay:${Math.min(i*28,280)}ms">
+        <td class="td-num">${String(i+1).padStart(2,'0')}</td>
+        <td class="td-nama">${esc(r.nama)}</td>
+        <td><span class="upill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 12h18M3 6h18M3 18h18"/></svg>${esc(r.ukuran)}</span></td>
+        <td class="td-qty">${r.qty}</td>
+        <td class="no-print">
+          <div class="act">
+            <button class="ib edit" onclick="openEdit(${r.id})" title="Edit banner">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="ib del" onclick="askDel(${r.id})" title="Hapus banner">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+  const fq=rows.reduce((s,r)=>s+r.qty,0);
+  document.getElementById('fi').innerHTML=`<b>${rows.length}</b> dari <b>${data.length}</b> banner`;
+  document.getElementById('ftot').innerHTML=`Total qty: <b>${fq}</b>`;
+  renderCounters();
+}
+
+/* ── counter animation ── */
+let cAnimFrame=null;
+function renderCounters(){
+  const tot=data.length;
+  const tq=data.reduce((s,r)=>s+r.qty,0);
+  const avg=tot?Math.round(tq/tot):0;
+  const items=[
+    {lbl:'Total Banner',val:tot,hint:'item terdaftar'},
+    {lbl:'Total Qty',val:tq,hint:'lembar banner'},
+    {lbl:'Rata-rata Qty',val:avg,hint:'per banner'},
+  ];
+  document.getElementById('counters').innerHTML=items.map((c,i)=>`
+    <div class="counter">
+      <div class="counter-glow"></div>
+      <div class="counter-eyebrow">${c.lbl}</div>
+      <div class="counter-val" id="cv${i}">0</div>
+      <div class="counter-hint">${c.hint}</div>
+    </div>`).join('');
+  // count up
+  items.forEach((c,i)=>countUp(`cv${i}`,c.val));
+}
+
+function countUp(id,target){
+  const el=document.getElementById(id);if(!el)return;
+  let cur=0;const dur=600,step=16;
+  const inc=target/(dur/step);
+  const run=()=>{
+    cur=Math.min(cur+inc,target);
+    el.textContent=Math.round(cur);
+    if(cur<target)requestAnimationFrame(run);
+  };
+  requestAnimationFrame(run);
+}
+
+/* ── sort ── */
+function srt(k){
+  ['nama','ukuran','qty'].forEach(x=>{
+    const el=document.getElementById('arr-'+x),th=el&&el.closest('th');
+    if(el){el.textContent='';if(th)th.classList.remove('active');}
+  });
+  if(sk===k)sa=!sa;else{sk=k;sa=true;}
+  const el=document.getElementById('arr-'+k),th=el&&el.closest('th');
+  if(el){el.textContent=sa?'↑':'↓';if(th)th.classList.add('active');}
+  render();
+}
+
+/* ── build item row ── */
+function buildRow(nama='',ukuran='',qty=1,isSingle=false){
+  const key=rowKey++;
+  const rmBtn=isSingle?'':
+    `<button class="rm-btn" onclick="removeRow(this)" title="Hapus baris"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  return `<div class="irow${isSingle?' single-row':''}" data-key="${key}">
+    <div class="ff">
+      <input type="text" class="f-nama" placeholder="Nama banner…" value="${esc(nama)}" autocomplete="off">
+    </div>
+    <div class="ff">
+      <input type="text" class="f-ukuran" placeholder="cth: 100×250 cm" value="${esc(ukuran)}" autocomplete="off">
+    </div>
+    <div class="ff ff-qty">
+      <input type="number" class="f-qty" value="${qty}" min="1">
+    </div>
+    ${rmBtn}
+  </div>`;
+}
+
+
+
+function addRow(nama='',ukuran='',qty=1){
+  const list=document.getElementById('ilist');
+  const wrap=document.createElement('div');
+  wrap.innerHTML=buildRow(nama,ukuran,qty,false);
+  const node=wrap.firstElementChild;
+  node.style.opacity='0';node.style.transform='translateY(10px)';
+  list.appendChild(node);
+  requestAnimationFrame(()=>{
+    node.style.transition='opacity .2s,transform .2s';
+    node.style.opacity='1';node.style.transform='none';
+  });
+  node.querySelector('.f-nama').focus();
+}
+
+function removeRow(btn){
+  const row=btn.closest('.irow');
+  row.style.transition='opacity .15s,transform .15s';
+  row.style.opacity='0';row.style.transform='scale(.97)';
+  setTimeout(()=>row.remove(),160);
+}
+
+/* ── modal open/close ── */
+function openAdd(){
+  eid=null;rowKey=0;
+  document.getElementById('mtitle').textContent='Tambah Banner';
+  document.getElementById('msub').textContent='Tambah satu atau beberapa banner sekaligus';
+  document.getElementById('micon').innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  document.getElementById('addRowBtn').style.display='';
+  const cl=document.getElementById('clabels');
+  cl.className='col-labels';
+  cl.innerHTML=`<div class="col-lbl">Nama Banner</div><div class="col-lbl">Ukuran</div><div class="col-lbl center">Qty</div><div></div>`;
+  document.getElementById('ilist').innerHTML='';
+  document.getElementById('ov').classList.add('on');
+  addRow();
+}
+
+function openEdit(id){
+  const r=data.find(x=>x.id===id);
+  eid=id;rowKey=0;
+  document.getElementById('mtitle').textContent='Edit Banner';
+  document.getElementById('msub').textContent=`Mengubah: ${r.nama}`;
+  document.getElementById('micon').innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  document.getElementById('addRowBtn').style.display='none';
+  const cl=document.getElementById('clabels');
+  cl.className='col-labels single';
+  cl.innerHTML=`<div class="col-lbl">Nama Banner</div><div class="col-lbl">Ukuran</div><div class="col-lbl center">Qty</div>`;
+  document.getElementById('ilist').innerHTML=buildRow(r.nama,r.ukuran,r.qty,true);
+  document.getElementById('ov').classList.add('on');
+  setTimeout(()=>document.querySelector('#ilist .f-nama').focus(),60);
+}
+
+function closeOv(){document.getElementById('ov').classList.remove('on')}
+
+/* ── save ── */
+function getRowData(row){
+  const nama=row.querySelector('.f-nama').value.trim();
+  const ukuran=row.querySelector('.f-ukuran').value.trim()||'—';
+  const qty=parseInt(row.querySelector('.f-qty').value)||1;
+  return{nama,ukuran,qty};
+}
+
+function save(){
+  const rows=[...document.querySelectorAll('#ilist .irow')];
+  let valid=true;
+  rows.forEach(r=>{
+    const ni=r.querySelector('.f-nama');
+    ni.classList.remove('error');
+    if(!ni.value.trim()){ni.classList.add('error');valid=false;}
+  });
+  if(!valid){document.querySelector('#ilist .f-nama.error').focus();return;}
+
+  if(eid!==null){
+    const{nama,ukuran,qty}=getRowData(rows[0]);
+    const i=data.findIndex(x=>x.id===eid);
+    data[i]={...data[i],nama,ukuran,qty};
+    closeOv();render();
+    toast('Banner berhasil diperbarui');
+  } else {
+    const count=rows.length;
+    rows.forEach(r=>{
+      const{nama,ukuran,qty}=getRowData(r);
+      data.push({id:nid++,nama,ukuran,qty});
+    });
+    closeOv();render();
+    toast(count===1?'1 banner ditambahkan':`${count} banner ditambahkan`);
+  }
+}
+
+/* ── delete ── */
+function askDel(id){
+  delId=id;
+  const r=data.find(x=>x.id===id);
+  document.getElementById('dname').textContent=r.nama;
+  document.getElementById('dov').classList.add('on');
+}
+function closeDel(){delId=null;document.getElementById('dov').classList.remove('on')}
+function confirmDel(){
+  if(delId!=null){
+    const name=data.find(x=>x.id===delId)?.nama||'Banner';
+    data=data.filter(x=>x.id!==delId);
+    closeDel();render();
+    toast(`"${name}" dihapus`,'info');
+  }
+}
+
+/* ── print ── */
+function doCetak(){
+  const ph=document.getElementById('ph');
+  ph.style.display='flex';
+  const now=new Date();
+  const tgl=now.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  const jam=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('ptd').innerHTML=
+    `Dicetak: <b>${tgl}</b> · ${jam}<br>Total: <b>${data.length}</b> banner · <b>${data.reduce((s,r)=>s+r.qty,0)}</b> lembar`;
+  window.print();
+  ph.style.display='';
+}
+
+/* ══════════════════════════════════════════
+   IMPORT EXCEL
+══════════════════════════════════════════ */
+function openDropzone(){
+  document.getElementById('dropzone').classList.add('on');
+  document.getElementById('xlFile').value='';
+}
+function closeDropzone(){
+  document.getElementById('dropzone').classList.remove('on');
+  document.getElementById('dzBox').classList.remove('hover');
+}
+
+/* drag & drop */
+const dz=document.getElementById('dropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();document.getElementById('dzBox').classList.add('hover')});
+dz.addEventListener('dragleave',e=>{if(e.target===dz||e.target===document.getElementById('dzBox'))document.getElementById('dzBox').classList.remove('hover')});
+dz.addEventListener('drop',e=>{
+  e.preventDefault();
+  document.getElementById('dzBox').classList.remove('hover');
+  const f=e.dataTransfer.files[0];
+  if(f)handleFile(f);
+});
+dz.addEventListener('click',e=>{if(e.target===dz)closeDropzone()});
+
+function handleFile(file){
+  if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(!['xlsx','xls','csv'].includes(ext)){
+    toast('Format tidak didukung. Gunakan .xlsx, .xls, atau .csv','info');
+    return;
+  }
+
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      let rows=[];
+      if(ext==='csv'){
+        rows=parseCSV(e.target.result);
+      } else {
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      }
+      importRows(rows,file.name);
+    } catch(err){
+      toast('Gagal membaca file: '+err.message,'info');
+    }
+  };
+  if(ext==='csv'){
+    reader.readAsText(file,'UTF-8');
+  } else {
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function parseCSV(text){
+  return text.trim().split(/\r?\n/).map(line=>{
+    // handle quoted fields
+    const cols=[];let cur='';let inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){inQ=!inQ;}
+      else if((c===','||c===';')&&!inQ){cols.push(cur.trim());cur='';}
+      else{cur+=c;}
+    }
+    cols.push(cur.trim());
+    return cols;
+  });
+}
+
+function importRows(rows,fname){
+  if(!rows||rows.length===0){
+    toast('File kosong atau tidak terbaca','info');
+    return;
+  }
+
+  // deteksi apakah baris pertama header
+  const firstRow=rows[0].map(c=>String(c).toLowerCase().trim());
+  const isHeader=firstRow.some(c=>['nama','name','banner','ukuran','size','qty','jumlah','quantity'].includes(c));
+  const dataRows=isHeader?rows.slice(1):rows;
+
+  let added=0,skipped=0;
+  dataRows.forEach(row=>{
+    if(!row||row.length===0)return;
+    const nama=String(row[0]||'').trim();
+    const ukuran=String(row[1]||'').trim();
+    const qty=parseInt(row[2])||1;
+    if(!nama){skipped++;return;}
+    data.push({id:nid++,nama,ukuran:ukuran||'—',qty});
+    added++;
+  });
+
+  closeDropzone();
+  render();
+
+  if(added>0){
+    toast(`${added} banner diimpor dari "${fname}"${skipped?` (${skipped} baris dilewati)`:''}`)
+  } else {
+    toast('Tidak ada data yang bisa diimpor. Cek format file.','info');
+  }
+}
+
+/* ── keyboard & overlay close ── */
+document.getElementById('ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv()});
+document.getElementById('dov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDel()});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeOv();closeDel();}
+  if(e.key==='Enter'&&document.getElementById('ov').classList.contains('on')&&document.activeElement.tagName!=='TEXTAREA'){
+    e.preventDefault();save();
+  }
+});
+
+srt('nama');
+</script>
+</body>
+</html>

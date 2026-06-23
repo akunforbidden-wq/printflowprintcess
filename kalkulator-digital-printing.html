@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<!-- saved from url=(0084)file:///E:/2026/'%20JUNI%202026%20DESIGN%201/MAULAN/kalkulator_digital_printing.html -->
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Digital Printing</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root{
+  --ink:#1c2b3a;
+  --paper:#f7f4ed;
+  --paper-deep:#efe9dc;
+  --line:#d9d2c2;
+  --accent:#c9542f;
+  --accent-deep:#a8401f;
+  --green:#3f6b4a;
+  --muted:#8a8275;
+  --white:#ffffff;
+  --shadow: 0 1px 2px rgba(28,43,58,.04), 0 8px 24px -8px rgba(28,43,58,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+body{
+  min-height:100vh;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(28,43,58,.045) 1px, transparent 0);
+  background-size:22px 22px;
+  padding:28px 16px 60px;
+}
+
+.wrap{max-width:1080px;margin:0 auto}
+
+/* ===== Header ===== */
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:18px}
+.head-left{display:flex;align-items:center;gap:14px}
+.head-mark{
+  width:52px;height:52px;border-radius:10px;background:var(--ink);color:var(--paper);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-1px;
+  transform:rotate(-3deg);box-shadow:var(--shadow);
+}
+.head-title{font-family:'Fraunces',serif;font-weight:600;font-size:28px;letter-spacing:-0.5px;line-height:1.1}
+.head-sub{font-size:13px;color:var(--muted);margin-top:4px;font-weight:500}
+.head-stamp{
+  font-family:'Space Mono',monospace;font-size:11px;color:var(--green);
+  border:1.5px dashed var(--green);padding:6px 12px;border-radius:6px;
+  transform:rotate(2deg);font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* ===== Layout ===== */
+.layout{display:grid;grid-template-columns:1.15fr 0.85fr;gap:22px;align-items:start}
+@media (max-width:880px){.layout{grid-template-columns:1fr}}
+
+.section-eyebrow{
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--ink);
+  letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-eyebrow::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* ===== Category pills ===== */
+.pill-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.pill{
+  padding:8px 16px;font-size:13px;font-weight:600;border-radius:999px;
+  border:1.5px solid var(--ink);background:var(--white);color:var(--ink);
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;
+}
+.pill:hover{background:var(--paper-deep)}
+.pill.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ===== Product list ===== */
+.plist{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.pcard{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;
+  border:1.5px solid var(--line);background:var(--white);cursor:pointer;
+  transition:all .15s;
+}
+.pcard:hover{border-color:var(--ink);transform:translateX(2px)}
+.pcard.sel{border-color:var(--accent);background:#fdf3ee;box-shadow:var(--shadow)}
+.pcard-ico{
+  width:42px;height:42px;border-radius:10px;background:var(--paper-deep);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.pcard.sel .pcard-ico{background:var(--accent);color:#fff}
+.pcard-name{font-size:14px;font-weight:600;color:var(--ink);line-height:1.3;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pcard-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.pcard-price{margin-left:auto;text-align:right;flex-shrink:0}
+.pcard-rp{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--ink)}
+.pcard.sel .pcard-rp{color:var(--accent-deep)}
+.pcard-unit{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace}
+.type-badge{
+  display:inline-block;font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;font-family:'Space Mono',monospace;
+}
+.badge-m{background:#e4ecf3;color:#3a5b7a}
+.badge-l{background:#e6efe2;color:var(--green)}
+
+/* ===== Right sticky panel ===== */
+.sticky-panel{position:sticky;top:16px}
+
+.calc-card{
+  background:var(--white);border-radius:16px;border:1.5px solid var(--ink);
+  overflow:hidden;box-shadow:var(--shadow);
+}
+.calc-header{
+  padding:18px 20px;border-bottom:1.5px dashed var(--line);
+  background:linear-gradient(135deg, var(--ink), #2c4257);color:var(--paper);
+}
+.calc-header-name{font-family:'Fraunces',serif;font-size:17px;font-weight:600}
+.calc-header-price{font-size:12px;color:#b9c8d6;margin-top:3px;font-family:'Space Mono',monospace}
+
+.calc-body{padding:20px}
+.field-g{margin-bottom:16px}
+.field-g label{
+  display:block;font-size:11px;color:var(--muted);margin-bottom:6px;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'Space Mono',monospace;
+}
+.irow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inp-wrap{position:relative}
+.inp-wrap input,.inp-wrap select{
+  width:100%;font-size:14px;font-family:'Inter',sans-serif;font-weight:600;
+  padding:10px 38px 10px 12px;border-radius:10px;border:1.5px solid var(--line);
+  background:var(--paper);color:var(--ink);transition:border-color .15s;
+  appearance:none;
+}
+.inp-wrap input:focus,.inp-wrap select:focus{outline:none;border-color:var(--accent);background:var(--white)}
+.inp-suffix{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:11px;color:var(--muted);pointer-events:none;font-family:'Space Mono',monospace;
+  font-weight:700;text-transform:uppercase;
+}
+.inp-wrap select{padding-right:34px}
+
+.divline{height:1px;background:repeating-linear-gradient(to right, var(--line) 0 6px, transparent 6px 12px);margin:18px 0}
+
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+.rrow-lbl{color:var(--muted)}
+.rrow-val{color:var(--ink);font-weight:600;font-family:'Space Mono',monospace}
+
+.total-strip{
+  display:flex;justify-content:space-between;align-items:center;padding:14px 16px;
+  background:var(--ink);margin-top:12px;border-radius:10px;
+}
+.total-lbl{font-size:12px;color:#b9c8d6;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'Space Mono',monospace}
+.total-rp{font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--paper)}
+
+.btn-add{
+  width:100%;padding:14px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;
+  border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;
+  margin-top:16px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:.02em;
+}
+.btn-add:hover{background:var(--accent-deep);transform:translateY(-1px)}
+.btn-add:active{transform:scale(0.98)}
+
+.empty-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:54px 24px;text-align:center;gap:12px}
+.empty-icon{
+  width:56px;height:56px;border-radius:50%;background:var(--paper-deep);
+  display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted);
+}
+.empty-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--ink)}
+.empty-txt{font-size:13px;color:var(--muted);max-width:220px;line-height:1.5}
+
+/* ===== Cart / receipt ===== */
+.cart-wrap{margin-top:18px}
+.cart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cart-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.btn-clear{
+  font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;
+  font-family:'Inter',sans-serif;padding:4px 8px;border-radius:6px;font-weight:600;
+  transition:all .15s;
+}
+.btn-clear:hover{color:var(--accent-deep);background:#fdf3ee}
+
+.receipt{
+  background:var(--white);border-radius:14px;border:1.5px solid var(--ink);
+  box-shadow:var(--shadow);padding:18px 20px;position:relative;
+}
+.receipt::before{
+  content:'';position:absolute;top:-1.5px;left:0;right:0;height:8px;
+  background:
+    radial-gradient(circle at 8px 4px, transparent 5px, var(--white) 5.5px) top left repeat-x,
+    var(--ink);
+  background-size:16px 8px;
+}
+
+.citem{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.citem:last-of-type{border-bottom:none}
+.citem-num{
+  width:22px;height:22px;border-radius:50%;background:var(--paper-deep);
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--ink);
+  flex-shrink:0;font-weight:700;margin-top:1px;font-family:'Space Mono',monospace;
+}
+.citem-info{flex:1;min-width:0}
+.citem-name{font-size:13px;font-weight:600;color:var(--ink)}
+.citem-detail{font-size:11px;color:var(--muted);margin-top:2px;font-family:'Space Mono',monospace}
+.citem-price{font-size:13px;font-weight:700;color:var(--ink);margin-left:auto;white-space:nowrap;padding-top:2px;font-family:'Space Mono',monospace}
+.btn-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;flex-shrink:0;line-height:1;transition:color .15s}
+.btn-rm:hover{color:var(--accent-deep)}
+
+.grand{
+  display:flex;justify-content:space-between;align-items:center;padding:14px 0 2px;
+  margin-top:10px;border-top:2px solid var(--ink);
+}
+.grand-lbl{font-family:'Fraunces',serif;font-size:15px;color:var(--ink);font-weight:600}
+.grand-val{font-family:'Fraunces',serif;font-size:26px;color:var(--accent-deep);font-weight:700}
+
+.count-badge{
+  display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;
+  border-radius:999px;background:var(--accent);color:#fff;font-size:11px;padding:0 6px;
+  font-weight:700;font-family:'Space Mono',monospace;
+}
+
+/* ===== Toast ===== */
+.toast-saved{background:var(--green)!important}
+
+/* ===== icons (simple inline svg via mask) ===== */
+.icon{width:20px;height:20px;display:inline-block;background:currentColor;mask-size:contain;mask-repeat:no-repeat;mask-position:center;flex-shrink:0}
+.icon-sm{width:16px;height:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="head-left">
+      <div class="head-mark">DP</div>
+      <div>
+        <div class="head-title">Kalkulator Digital Printing</div>
+        <div class="head-sub">Hitung harga cetak spanduk, sticker &amp; kertas secara instan</div>
+      </div>
+    </div>
+    <div class="head-stamp">✓ Estimasi harga real-time</div>
+  </div>
+
+  <div class="layout">
+    <div class="left-col">
+      <div class="section-eyebrow">Kategori</div>
+      <div class="pill-tabs" id="pills"><button class="pill on" onclick="setCat(&#39;all&#39;)">🗂️ Semua</button><button class="pill" onclick="setCat(&#39;banner&#39;)">🖼️ Banner</button><button class="pill" onclick="setCat(&#39;backlite&#39;)">💡 Backlite</button><button class="pill" onclick="setCat(&#39;sticker&#39;)">🏷️ Sticker</button><button class="pill" onclick="setCat(&#39;paper&#39;)">📄 Kertas</button></div>
+      <div class="section-eyebrow">Pilih produk</div>
+      <div class="plist" id="plist">
+    <div class="pcard sel" onclick="selectProd(1)">
+      <div class="pcard-ico">🖼️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Flexi 260gsm<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Spanduk standar ringan</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 23.500</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(2)">
+      <div class="pcard-ico">🖼️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Flexi 280gsm<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Spanduk medium</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 27.500</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(3)">
+      <div class="pcard-ico">🖼️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Flexi 340gsm<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Spanduk tebal premium</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 33.000</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(4)">
+      <div class="pcard-ico">🖼️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Flexi 440gsm<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Spanduk super tebal</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 65.000</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(5)">
+      <div class="pcard-ico">💡</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Backlite single side<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Lampu belakang satu muka</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 75.000</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(6)">
+      <div class="pcard-ico">💡</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Backlite double side<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Lampu belakang dua muka</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 95.000</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(7)">
+      <div class="pcard-ico">🏷️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Sticker vinyl roll<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Sticker ukuran bebas</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 95.000</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(8)">
+      <div class="pcard-ico">👁️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">One way vision<span class="type-badge badge-m">per m²</span></div>
+        <div class="pcard-desc">Kaca satu arah</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 100.000</div>
+        <div class="pcard-unit">/meter</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(9)">
+      <div class="pcard-ico">📄</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Ivory A3<span class="type-badge badge-l">per lembar</span></div>
+        <div class="pcard-desc">Satu sisi</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 5.000</div>
+        <div class="pcard-unit">/lembar</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(10)">
+      <div class="pcard-ico">📑</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Ivory A3 bolak-balik<span class="type-badge badge-l">per lembar</span></div>
+        <div class="pcard-desc">Dua sisi</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 7.000</div>
+        <div class="pcard-unit">/lembar</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(11)">
+      <div class="pcard-ico">📃</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Art paper<span class="type-badge badge-l">per lembar</span></div>
+        <div class="pcard-desc">Satu sisi</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 4.000</div>
+        <div class="pcard-unit">/lembar</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(12)">
+      <div class="pcard-ico">📑</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Art paper bolak-balik<span class="type-badge badge-l">per lembar</span></div>
+        <div class="pcard-desc">Dua sisi</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 6.000</div>
+        <div class="pcard-unit">/lembar</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(13)">
+      <div class="pcard-ico">🏷️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Sticker vinyl A3<span class="type-badge badge-l">per lembar</span></div>
+        <div class="pcard-desc">Per lembar A3</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 15.000</div>
+        <div class="pcard-unit">/lembar</div>
+      </div>
+    </div>
+  
+    <div class="pcard" onclick="selectProd(14)">
+      <div class="pcard-ico">🏷️</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">Sticker chromo A3<span class="type-badge badge-l">per lembar</span></div>
+        <div class="pcard-desc">Per lembar A3</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">Rp 10.000</div>
+        <div class="pcard-unit">/lembar</div>
+      </div>
+    </div>
+  </div>
+    </div>
+
+    <div class="right-col">
+      <div class="sticky-panel">
+        <div class="section-eyebrow">Kalkulator harga</div>
+        <div class="calc-card">
+          <div id="calcInner">
+    <div class="calc-header">
+      <div class="calc-header-name">Flexi 260gsm</div>
+      <div class="calc-header-price">Rp 23.500 / meter</div>
+    </div>
+    <div class="calc-body">
+      
+      <div class="field-g">
+        <label>Ukuran (meter)</label>
+        <div class="irow">
+          <div class="inp-wrap"><input type="number" id="lebar" value="1" min="0.1" step="0.1" oninput="calc()"><span class="inp-suffix">lebar</span></div>
+          <div class="inp-wrap"><input type="number" id="tinggi" value="2" min="0.1" step="0.1" oninput="calc()"><span class="inp-suffix">tinggi</span></div>
+        </div>
+      </div>
+      <div class="field-g">
+        <label>Jumlah</label>
+        <div class="inp-wrap" style="width:50%"><input type="number" id="qty" value="1" min="1" oninput="calc()"><span class="inp-suffix">buah</span></div>
+      </div>
+      <div class="field-g">
+        <label>Finishing tambahan</label>
+        <div class="inp-wrap"><select id="fin" onchange="calc()">
+          <option value="0">Tanpa finishing</option>
+          <option value="5000">Mata ayam (Rp 5.000/buah)</option>
+          <option value="10000">Laminasi glossy (Rp 10.000/m²)</option>
+          <option value="12000">Laminasi doff (Rp 12.000/m²)</option>
+        </select></div>
+      </div>
+      <div class="divline"></div>
+      <div id="calcResults">
+      <div class="rrow"><span class="rrow-lbl">Luas per buah</span><span class="rrow-val">0.8400 m²</span></div>
+      <div class="rrow"><span class="rrow-lbl">Biaya cetak / buah</span><span class="rrow-val">Rp 19.740</span></div>
+      
+      <div class="rrow"><span class="rrow-lbl">Jumlah</span><span class="rrow-val">× 6</span></div>
+      <div class="total-strip"><span class="total-lbl">Total</span><span class="total-rp">Rp 118.440</span></div></div>
+      <button class="btn-add" onclick="addToCart()">🛒 Tambah ke keranjang</button>
+    </div></div>
+        </div>
+
+        <div class="cart-wrap" id="cartWrap" style="display:none">
+          <div class="cart-header">
+            <div class="cart-title">Keranjang <span class="count-badge" id="cartCount">0</span></div>
+            <button class="btn-clear" onclick="clearCart()">🗑 Kosongkan</button>
+          </div>
+          <div class="receipt">
+            <div id="cartList"></div>
+            <div class="grand">
+              <span class="grand-lbl">Total keseluruhan</span>
+              <span class="grand-val" id="grandVal">Rp 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cats=[
+  {id:'all',label:'Semua',icon:'🗂️'},
+  {id:'banner',label:'Banner',icon:'🖼️'},
+  {id:'backlite',label:'Backlite',icon:'💡'},
+  {id:'sticker',label:'Sticker',icon:'🏷️'},
+  {id:'paper',label:'Kertas',icon:'📄'},
+];
+const products=[
+  {id:1,name:'Flexi 260gsm',desc:'Spanduk standar ringan',ico:'🖼️',cat:'banner',type:'m',price:23500},
+  {id:2,name:'Flexi 280gsm',desc:'Spanduk medium',ico:'🖼️',cat:'banner',type:'m',price:27500},
+  {id:3,name:'Flexi 340gsm',desc:'Spanduk tebal premium',ico:'🖼️',cat:'banner',type:'m',price:33000},
+  {id:4,name:'Flexi 440gsm',desc:'Spanduk super tebal',ico:'🖼️',cat:'banner',type:'m',price:65000},
+  {id:5,name:'Backlite single side',desc:'Lampu belakang satu muka',ico:'💡',cat:'backlite',type:'m',price:75000},
+  {id:6,name:'Backlite double side',desc:'Lampu belakang dua muka',ico:'💡',cat:'backlite',type:'m',price:95000},
+  {id:7,name:'Sticker vinyl roll',desc:'Sticker ukuran bebas',ico:'🏷️',cat:'sticker',type:'m',price:95000},
+  {id:8,name:'One way vision',desc:'Kaca satu arah',ico:'👁️',cat:'sticker',type:'m',price:100000},
+  {id:9,name:'Ivory A3',desc:'Satu sisi',ico:'📄',cat:'paper',type:'l',price:5000},
+  {id:10,name:'Ivory A3 bolak-balik',desc:'Dua sisi',ico:'📑',cat:'paper',type:'l',price:7000},
+  {id:11,name:'Art paper',desc:'Satu sisi',ico:'📃',cat:'paper',type:'l',price:4000},
+  {id:12,name:'Art paper bolak-balik',desc:'Dua sisi',ico:'📑',cat:'paper',type:'l',price:6000},
+  {id:13,name:'Sticker vinyl A3',desc:'Per lembar A3',ico:'🏷️',cat:'sticker',type:'l',price:15000},
+  {id:14,name:'Sticker chromo A3',desc:'Per lembar A3',ico:'🏷️',cat:'sticker',type:'l',price:10000},
+];
+
+let curCat='all',selProd=null,cart=[],curItem=null;
+
+function fmt(n){return'Rp '+Math.round(n).toLocaleString('id-ID')}
+
+function renderPills(){
+  document.getElementById('pills').innerHTML=cats.map(c=>
+    `<button class="pill${curCat===c.id?' on':''}" onclick="setCat('${c.id}')">${c.icon} ${c.label}</button>`
+  ).join('');
+}
+
+function setCat(id){curCat=id;renderPills();renderProducts()}
+
+function renderProducts(){
+  const list=curCat==='all'?products:products.filter(p=>p.cat===curCat);
+  document.getElementById('plist').innerHTML=list.map(p=>`
+    <div class="pcard${selProd&&selProd.id===p.id?' sel':''}" onclick="selectProd(${p.id})">
+      <div class="pcard-ico">${p.ico}</div>
+      <div style="flex:1;min-width:0">
+        <div class="pcard-name">${p.name}<span class="type-badge ${p.type==='m'?'badge-m':'badge-l'}">${p.type==='m'?'per m²':'per lembar'}</span></div>
+        <div class="pcard-desc">${p.desc}</div>
+      </div>
+      <div class="pcard-price">
+        <div class="pcard-rp">${fmt(p.price)}</div>
+        <div class="pcard-unit">/${p.type==='m'?'meter':'lembar'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectProd(id){
+  selProd=products.find(p=>p.id===id);
+  renderProducts();
+  renderCalc();
+}
+
+function renderCalc(){
+  if(!selProd){
+    document.getElementById('calcInner').innerHTML=`<div class="empty-panel"><div class="empty-icon">👉</div><div class="empty-title">Belum ada produk dipilih</div><div class="empty-txt">Pilih salah satu produk di sebelah kiri untuk mulai menghitung harga</div></div>`;
+    return;
+  }
+  const p=selProd;
+  let fields='';
+  if(p.type==='m'){
+    fields=`
+      <div class="field-g">
+        <label>Ukuran (meter)</label>
+        <div class="irow">
+          <div class="inp-wrap"><input type="number" id="lebar" value="1" min="0.1" step="0.1" oninput="calc()"><span class="inp-suffix">lebar</span></div>
+          <div class="inp-wrap"><input type="number" id="tinggi" value="2" min="0.1" step="0.1" oninput="calc()"><span class="inp-suffix">tinggi</span></div>
+        </div>
+      </div>
+      <div class="field-g">
+        <label>Jumlah</label>
+        <div class="inp-wrap" style="width:50%"><input type="number" id="qty" value="1" min="1" oninput="calc()"><span class="inp-suffix">buah</span></div>
+      </div>
+      <div class="field-g">
+        <label>Finishing tambahan</label>
+        <div class="inp-wrap"><select id="fin" onchange="calc()">
+          <option value="0">Tanpa finishing</option>
+          <option value="5000">Mata ayam (Rp 5.000/buah)</option>
+          <option value="10000">Laminasi glossy (Rp 10.000/m²)</option>
+          <option value="12000">Laminasi doff (Rp 12.000/m²)</option>
+        </select></div>
+      </div>`;
+  } else {
+    fields=`
+      <div class="field-g">
+        <label>Jumlah lembar</label>
+        <div class="inp-wrap" style="width:60%"><input type="number" id="qty" value="1" min="1" oninput="calc()"><span class="inp-suffix">lembar</span></div>
+      </div>`;
+  }
+  document.getElementById('calcInner').innerHTML=`
+    <div class="calc-header">
+      <div class="calc-header-name">${p.name}</div>
+      <div class="calc-header-price">${fmt(p.price)} / ${p.type==='m'?'meter':'lembar'}</div>
+    </div>
+    <div class="calc-body">
+      ${fields}
+      <div class="divline"></div>
+      <div id="calcResults"></div>
+      <button class="btn-add" onclick="addToCart()">🛒 Tambah ke keranjang</button>
+    </div>`;
+  calc();
+}
+
+function calc(){
+  if(!selProd)return;
+  const p=selProd;
+  let html='',price=0,label='';
+  if(p.type==='m'){
+    const w=parseFloat(document.getElementById('lebar').value)||0;
+    const h=parseFloat(document.getElementById('tinggi').value)||0;
+    const qty=parseInt(document.getElementById('qty').value)||1;
+    const finV=parseInt(document.getElementById('fin').value)||0;
+    const finEl=document.getElementById('fin');
+    const finTxt=finEl.options[finEl.selectedIndex].text.split(' ')[0]+' '+finEl.options[finEl.selectedIndex].text.split(' ')[1];
+    const luas=w*h;
+    const base=luas*p.price;
+    const finPerUnit=finV===5000?finV:finV*luas;
+    const subtotal=(base+finPerUnit)*qty;
+    price=subtotal;
+    label=`${w}×${h}m × ${qty} buah`;
+    html=`
+      <div class="rrow"><span class="rrow-lbl">Luas per buah</span><span class="rrow-val">${luas.toFixed(4)} m²</span></div>
+      <div class="rrow"><span class="rrow-lbl">Biaya cetak / buah</span><span class="rrow-val">${fmt(base)}</span></div>
+      ${finV>0?`<div class="rrow"><span class="rrow-lbl">Finishing / buah</span><span class="rrow-val">${fmt(finPerUnit)}</span></div>`:''}
+      <div class="rrow"><span class="rrow-lbl">Jumlah</span><span class="rrow-val">× ${qty}</span></div>
+      <div class="total-strip"><span class="total-lbl">Total</span><span class="total-rp">${fmt(subtotal)}</span></div>`;
+  } else {
+    const qty=parseInt(document.getElementById('qty').value)||1;
+    const subtotal=p.price*qty;
+    price=subtotal;
+    label=`${qty} lembar`;
+    html=`
+      <div class="rrow"><span class="rrow-lbl">Harga per lembar</span><span class="rrow-val">${fmt(p.price)}</span></div>
+      <div class="rrow"><span class="rrow-lbl">Jumlah</span><span class="rrow-val">× ${qty}</span></div>
+      <div class="total-strip"><span class="total-lbl">Total</span><span class="total-rp">${fmt(subtotal)}</span></div>`;
+  }
+  document.getElementById('calcResults').innerHTML=html;
+  curItem={name:selProd.name,detail:label,price};
+}
+
+function addToCart(){
+  if(!curItem)return;
+  cart.push({...curItem,id:Date.now()});
+  renderCart();
+  const btn=document.querySelector('.btn-add');
+  if(btn){
+    btn.textContent='✓ Ditambahkan!';
+    btn.classList.add('toast-saved');
+    setTimeout(()=>{btn.innerHTML='🛒 Tambah ke keranjang';btn.classList.remove('toast-saved')},1200);
+  }
+}
+
+function removeItem(id){cart=cart.filter(i=>i.id!==id);renderCart()}
+function clearCart(){cart=[];renderCart()}
+
+function renderCart(){
+  const wrap=document.getElementById('cartWrap');
+  if(!cart.length){wrap.style.display='none';return}
+  wrap.style.display='block';
+  document.getElementById('cartCount').textContent=cart.length;
+  document.getElementById('cartList').innerHTML=cart.map((it,i)=>`
+    <div class="citem">
+      <div class="citem-num">${i+1}</div>
+      <div class="citem-info">
+        <div class="citem-name">${it.name}</div>
+        <div class="citem-detail">${it.detail}</div>
+      </div>
+      <div class="citem-price">${fmt(it.price)}</div>
+      <button class="btn-rm" onclick="removeItem(${it.id})" aria-label="Hapus item">✕</button>
+    </div>`).join('');
+  const total=cart.reduce((s,i)=>s+i.price,0);
+  document.getElementById('grandVal').textContent=fmt(total);
+}
+
+renderPills();renderProducts();
+</script>
+
+
+</body></html>
